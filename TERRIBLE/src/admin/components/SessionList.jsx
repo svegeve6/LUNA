@@ -578,13 +578,15 @@ const SessionHeaderRow = () => {
             Last Active
           </div>
         </div>
-        <div className="w-1/6">
+        <div className="w-1/8">
           <div className="text-xs font-medium text-white/60 uppercase tracking-wider">
             Status
           </div>
         </div>
-        <div className="w-1/6">
-          {/* Space for actions */}
+        <div className="flex-1">
+          <div className="text-xs font-medium text-white/60 uppercase tracking-wider text-right pr-4">
+            Actions
+          </div>
         </div>
       </div>
     </div>
@@ -740,13 +742,13 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
           <HeartbeatIndicator lastHeartbeat={session.lastHeartbeat} />
         </div>
 
-        <div className="w-1/6">
-          <StatusBadge 
-            status={session.loading ? 'loading' : (session.connected || session.loading ? 'connected' : 'inactive')} 
+        <div className="w-1/8">
+          <StatusBadge
+            status={session.loading ? 'loading' : (session.connected || session.loading ? 'connected' : 'inactive')}
           />
         </div>
 
-        <div className="relative flex items-center justify-end space-x-4 w-1/6">
+        <div className="relative flex items-center justify-end space-x-2 flex-1">
           <div className={`absolute inset-0 rounded-lg transition-opacity duration-300
                         ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
             <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-sm rounded-lg" />
@@ -816,7 +818,8 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
                       assignSession(session.id, e.target.value);
                     }
                   }}
-                  className="px-2 py-1 text-xs bg-[#1C2029] border border-gray-800/50 rounded text-gray-300 hover:border-gray-700 focus:outline-none focus:border-blue-500/50"
+                  className="relative z-50 px-2 py-1 text-xs bg-[#1C2029] border border-gray-800/50 rounded text-gray-300 hover:border-gray-700 focus:outline-none focus:border-blue-500/50"
+                  style={{ position: 'relative', zIndex: 50 }}
                 >
                   <option value="">Assign to...</option>
                   {callers.map(caller => (

