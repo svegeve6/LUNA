@@ -403,5 +403,6 @@ export default function Settings() {
         <BannedIPs />
       </div>
     </div>
+    </>
   );
 }
