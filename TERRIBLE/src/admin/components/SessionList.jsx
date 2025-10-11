@@ -815,7 +815,7 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
 
 const SessionList = ({ userRole }) => {
   // Add settings to the destructured values from useAdminSocket
-  const { sessions, banIP, redirectUser, removeSession, settings, callers, assignSession } = useAdminSocket();
+  const { sessions, banIP, redirectUser, removeSession, settings, callers, assignSession, aliases, setAlias } = useAdminSocket();
   const { userRole: authUserRole, currentUser: currentUsername } = useAuth();
   const [newSessions, setNewSessions] = useState(new Set());
   const [heartbeatTick, setHeartbeatTick] = useState(0);
@@ -913,15 +913,20 @@ const SessionList = ({ userRole }) => {
   };
 
   const handleAssignClick = (session) => {
+    // Add the alias to the session object if it exists
+    const sessionWithAlias = {
+      ...session,
+      alias: aliases[session.id] || null
+    };
     setAssignModal({
       isOpen: true,
-      session: session
+      session: sessionWithAlias
     });
   };
 
   const handleAssignCaller = (sessionId, callerUsername, alias) => {
     // Set the alias first, then assign the session
-    setServerAlias(sessionId, alias);
+    setAlias(sessionId, alias);
     assignSession(sessionId, callerUsername);
     setAssignModal({
       isOpen: false,
