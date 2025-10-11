@@ -10,7 +10,6 @@ import BannedIPs from './components/BannedIPs';
 import LoginPage from './pages/LoginPage';
 import MacOSLayout from './components/MacOSLayout';
 import SeasonalDecorations from './components/SeasonalDecorations';
-import ChristmasLights from './components/ChristmasLights';
 import { LogOut } from 'lucide-react';
 import './styles/themes.css';
 
@@ -54,11 +53,6 @@ const AppContent = () => {
           transition-all duration-700 ease-out
           ${isAppearing ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
         `}>
-          {/* Christmas Lights at top of dashboard */}
-          <div className="relative">
-            <ChristmasLights position="top" />
-          </div>
-
           {/* Breadcrumb Header */}
           <div className="px-8 py-6 border-b border-gray-800/50 bg-[#0F1117]">
             <div className="flex items-center space-x-2 text-sm text-gray-500">

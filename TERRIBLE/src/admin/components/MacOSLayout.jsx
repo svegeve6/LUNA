@@ -3,7 +3,6 @@ import { LayoutDashboard, Settings, Activity, User, Phone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import SeasonalAvatar from './SeasonalAvatar';
-import ChristmasLights from './ChristmasLights';
 
 const MacOSLayout = ({ children, activeView, onViewChange }) => {
   const [pruneJuiceLevel, setPruneJuiceLevel] = useState(0);
@@ -28,9 +27,6 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
     <div className="min-h-screen theme-page-bg theme-text-primary flex">
       {/* Sidebar */}
       <div className="w-72 theme-primary-bg border-r theme-border flex flex-col relative">
-        {/* Christmas Lights on Sidebar */}
-        <ChristmasLights position="top" />
-
         {/* User Profile Section */}
         <div className="p-6 border-b border-gray-800/50">
           <div className="flex items-center space-x-3">
@@ -51,26 +47,19 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
 
         {/* Main Navigation */}
         <div className="flex-1 py-4 relative">
-          {navItems.map((item, index) => (
-            <React.Fragment key={item.id}>
-              <button
-                onClick={() => onViewChange(item.id)}
-                className={`w-full flex items-center space-x-3 px-6 py-3 transition-all duration-200 relative
-                  ${activeView === item.id
-                    ? 'bg-blue-500/10 text-blue-400 border-r-2 border-blue-400'
-                    : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                  }`}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
-              </button>
-              {/* Christmas lights between nav items */}
-              {index < navItems.length - 1 && (
-                <div className="relative h-0">
-                  <ChristmasLights position="between" />
-                </div>
-              )}
-            </React.Fragment>
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => onViewChange(item.id)}
+              className={`w-full flex items-center space-x-3 px-6 py-3 transition-all duration-200 relative
+                ${activeView === item.id
+                  ? 'bg-blue-500/10 text-blue-400 border-r-2 border-blue-400'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                }`}
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="font-medium">{item.label}</span>
+            </button>
           ))}
         </div>
 
