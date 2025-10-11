@@ -38,12 +38,13 @@ function AdminSocketProvider({ children }) {
     const authData = JSON.parse(localStorage.getItem('adminAuth') || '{}');
     const userRole = authData.role || 'admin';
     const currentUser = authData.username || 'Admin';
+    const authToken = authData.token || '123'; // Use actual token for callers, default for admin
 
     // Change '/admin' to match the new route structure
     const newSocket = io('/admin', {  // Remove the serverUrl concatenation
       transports: ['websocket', 'polling'],
       auth: {
-        token: '123',
+        token: authToken,
         role: userRole,
         username: currentUser
       },
@@ -161,6 +162,13 @@ function AdminSocketProvider({ children }) {
         ...prev,
         [sessionId]: alias
       }));
+    });
+
+    // Redirect error handling
+    newSocket.on('redirect_error', ({ error, sessionId }) => {
+      console.error(`Redirect failed for session ${sessionId}: ${error}`);
+      // You could also show a toast notification here if you have a notification system
+      alert(`Redirect failed: ${error}`);
     });
 
     // Handle forced logout for callers

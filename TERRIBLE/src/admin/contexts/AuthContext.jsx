@@ -12,12 +12,46 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-  const checkAuthStatus = () => {
+  const checkAuthStatus = async () => {
     const authData = JSON.parse(localStorage.getItem('adminAuth'));
     if (authData && authData.expiresAt && new Date().getTime() < authData.expiresAt) {
-      setIsAuthenticated(true);
-      setUserRole(authData.role || 'admin');
-      setCurrentUser(authData.username || 'admin');
+      // If it's a caller with a token, validate it with the server
+      if (authData.role === 'caller' && authData.token) {
+        try {
+          const response = await fetch('/api/auth/validate-token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ token: authData.token })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            setIsAuthenticated(true);
+            setUserRole('caller');
+            setCurrentUser(data.user.username);
+          } else {
+            // Token is invalid or user was deleted
+            localStorage.removeItem('adminAuth');
+            setIsAuthenticated(false);
+            setUserRole(null);
+            setCurrentUser(null);
+          }
+        } catch (error) {
+          console.error('Failed to validate token:', error);
+          localStorage.removeItem('adminAuth');
+          setIsAuthenticated(false);
+          setUserRole(null);
+          setCurrentUser(null);
+        }
+      } else {
+        // Admin auth (no server validation needed)
+        setIsAuthenticated(true);
+        setUserRole(authData.role || 'admin');
+        setCurrentUser(authData.username || 'admin');
+      }
     } else {
       localStorage.removeItem('adminAuth');
       setIsAuthenticated(false);
@@ -52,11 +86,12 @@ export const AuthProvider = ({ children }) => {
         const data = await response.json();
 
         if (data.success) {
-          const expiresAt = new Date().getTime() + (24 * 60 * 60 * 1000); // 24 hours
+          const expiresAt = new Date().getTime() + (7 * 24 * 60 * 60 * 1000); // 7 days (matching server)
           localStorage.setItem('adminAuth', JSON.stringify({
             expiresAt,
             role: 'caller',
-            username: data.user.username
+            username: data.user.username,
+            token: data.token // Store the session token
           }));
 
           setIsAuthenticated(true);
