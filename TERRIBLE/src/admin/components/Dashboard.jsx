@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   Users, Shield, Globe, Clipboard, Trash2, Download, Waves, Anchor, LogOut
 } from 'lucide-react';
-import ThemeDecorations, { ThemeAvatar } from './ThemeDecorations';
 
 const StatCard = ({ icon: Icon, title, value, secondary, type = 'default' }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -96,48 +95,33 @@ const QuickAction = ({ icon: Icon, label, onClick, variant = 'primary', active =
 
 export default function Dashboard() {
   const { sessions, settings, bannedIPs, clearSessions, updateSettings } = useAdminSocket();
-  const { logout, userRole, currentUser } = useAuth();
+  const { logout, userRole } = useAuth();
 
   const activeSessions = sessions.filter(s => s.connected).length;
   const totalSessions = sessions.length;
 
   return (
     <div className="space-y-4 lg:space-y-6 relative">
-      {/* Theme Decorations */}
-      <ThemeDecorations />
-
-      {/* Profile Avatar & Logout - Top Right */}
-      <div className="absolute top-0 right-0 z-10 flex items-center space-x-4">
-        {/* Theme Avatar */}
-        <div className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-[#161A22] border border-gray-800/50">
-          <ThemeAvatar className="w-10 h-10" />
-          <div className="hidden sm:block">
-            <div className="text-sm font-medium text-white">{currentUser || 'Admin'}</div>
-            <div className="text-xs text-gray-400 capitalize">{userRole || 'Administrator'}</div>
-          </div>
-        </div>
-
-        {/* Logout Button */}
-        <button
-          onClick={() => {
-            if (window.confirm('Are you sure you want to logout?')) {
-              logout();
-            }
-          }}
-          className="flex items-center space-x-2
-                     px-4 py-2 rounded-lg
-                     bg-red-500/10 hover:bg-red-500/20
-                     border border-red-500/30
-                     transition-all duration-200
-                     text-red-400 hover:text-red-300"
-        >
-          <LogOut className="w-4 h-4" />
-          <span className="text-sm font-medium hidden sm:inline">Logout</span>
-        </button>
-      </div>
+      {/* Logout Button - Top Right */}
+      <button
+        onClick={() => {
+          if (window.confirm('Are you sure you want to logout?')) {
+            logout();
+          }
+        }}
+        className="absolute top-0 right-0 z-10 flex items-center space-x-2
+                   px-4 py-2 rounded-lg
+                   bg-red-500/10 hover:bg-red-500/20
+                   border border-red-500/30
+                   transition-all duration-200
+                   text-red-400 hover:text-red-300"
+      >
+        <LogOut className="w-4 h-4" />
+        <span className="text-sm font-medium">Logout</span>
+      </button>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 pt-20">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 pt-12">
         <StatCard
           icon={Users}
           title="Active Sessions"
