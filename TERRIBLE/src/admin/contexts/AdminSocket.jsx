@@ -237,7 +237,7 @@ function AdminSocketProvider({ children }) {
       socket?.emit('clear_sessions');
     },
     assignSession: (sessionId, caller) => {
-      socket?.emit('assign_session', { sessionId, caller });
+      socket?.emit('assign_session', { sessionId, callerId: caller });
     },
     unassignSession: (sessionId) => {
       socket?.emit('unassign_session', { sessionId });
