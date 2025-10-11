@@ -86,6 +86,22 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
                 className="h-full rounded-full candy-cane-stripes"
                 style={{ width: `${pruneJuiceLevel}%` }}
               />
+            ) : currentTheme === 'fall' ? (
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${pruneJuiceLevel}%`,
+                  background: 'linear-gradient(90deg, #d97706, #ea580c, #dc2626)'
+                }}
+              />
+            ) : currentTheme === 'halloween' ? (
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${pruneJuiceLevel}%`,
+                  background: 'linear-gradient(90deg, #ff8c00, #9333ea)'
+                }}
+              />
             ) : (
               <div
                 className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full"
@@ -101,11 +117,12 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
             background: repeating-linear-gradient(
               45deg,
               #ffffff,
-              #ffffff 4px,
-              #dc2626 4px,
-              #dc2626 8px
+              #ffffff 5px,
+              #dc2626 5px,
+              #dc2626 10px
             );
-            animation: candy-cane-animation 0.5s linear infinite;
+            background-size: 14.14px 14.14px;
+            animation: candy-cane-animation 0.6s linear infinite;
           }
 
           @keyframes candy-cane-animation {
@@ -113,7 +130,7 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
               background-position: 0 0;
             }
             100% {
-              background-position: 11.3px 0;
+              background-position: 14.14px 0;
             }
           }
         `}</style>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAdminSocket } from '../contexts/AdminSocket';
+import { useTheme } from '../contexts/ThemeContext';
 import { UserPlus, Trash2, Eye, EyeOff, Copy, Check, Phone, Edit2, X, Shield } from 'lucide-react';
 
 const CallerCard = ({ caller, onDelete, onUpdate }) => {
@@ -273,7 +274,39 @@ const CreateCallerForm = ({ onCreate, onCancel }) => {
 
 export default function Callers() {
   const { callers, addCaller, updateCaller, deleteCaller } = useAdminSocket();
+  const { currentTheme } = useTheme();
   const [showCreateForm, setShowCreateForm] = useState(false);
+
+  const getThemeColors = () => {
+    switch (currentTheme) {
+      case 'halloween':
+        return {
+          headerBg: 'bg-[#1A0F1A]',
+          headerBorder: 'border-orange-500/20',
+          iconColor: 'text-orange-500',
+        };
+      case 'christmas':
+        return {
+          headerBg: 'bg-[#0F1A0F]',
+          headerBorder: 'border-red-500/20',
+          iconColor: 'text-red-500',
+        };
+      case 'fall':
+        return {
+          headerBg: 'bg-[#1F1612]',
+          headerBorder: 'border-amber-600/20',
+          iconColor: 'text-amber-600',
+        };
+      default:
+        return {
+          headerBg: 'bg-[#161A22]',
+          headerBorder: 'border-gray-800/50',
+          iconColor: 'text-purple-400',
+        };
+    }
+  };
+
+  const themeColors = getThemeColors();
 
   const handleCreate = (callerData) => {
     addCaller(callerData);
@@ -289,12 +322,12 @@ export default function Callers() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="relative rounded-xl overflow-hidden bg-[#161A22] border border-gray-800/50">
+      <div className={`relative rounded-xl overflow-hidden ${themeColors.headerBg} border ${themeColors.headerBorder}`}>
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-medium text-gray-300 flex items-center space-x-2">
-                <Phone className="w-5 h-5 text-purple-400" />
+                <Phone className={`w-5 h-5 ${themeColors.iconColor}`} />
                 <span>Caller Management</span>
               </h2>
               <p className="text-sm text-gray-500 mt-1">

@@ -17,111 +17,103 @@ const SeasonalDecorations = () => {
   }, [currentTheme]);
 
   const generateGhosts = () => {
-    const ghosts = Array.from({ length: 5 }, (_, i) => ({
+    const ghosts = Array.from({ length: 6 }, (_, i) => ({
       id: `ghost-${i}`,
-      left: Math.random() * 100,
+      left: 10 + Math.random() * 80,
       delay: Math.random() * 5,
-      duration: 8 + Math.random() * 4,
+      duration: 10 + Math.random() * 5,
+      drift: Math.random() * 60 - 30,
     }));
     setDecorations(ghosts);
   };
 
   const generateLeaves = () => {
-    const leaves = Array.from({ length: 15 }, (_, i) => ({
+    const leaves = Array.from({ length: 20 }, (_, i) => ({
       id: `leaf-${i}`,
       left: Math.random() * 100,
       delay: Math.random() * 5,
-      duration: 8 + Math.random() * 4,
+      duration: 10 + Math.random() * 5,
       rotation: Math.random() * 360,
+      drift: Math.random() * 100 - 50,
+      leafType: ['🍂', '🍁'][Math.floor(Math.random() * 2)],
     }));
     setDecorations(leaves);
   };
 
   if (currentTheme === 'halloween') {
     return (
-      <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none z-50" style={{ overflow: 'hidden' }}>
         {decorations.map((ghost) => (
           <div
             key={ghost.id}
-            className="absolute animate-float-ghost opacity-20"
+            className="absolute"
             style={{
               left: `${ghost.left}%`,
+              bottom: '-100px',
+              animation: `float-ghost-${ghost.id} ${ghost.duration}s linear infinite`,
               animationDelay: `${ghost.delay}s`,
-              animationDuration: `${ghost.duration}s`,
             }}
           >
-            <div className="text-6xl">👻</div>
+            <div className="text-5xl opacity-30" style={{ filter: 'blur(0.5px)' }}>👻</div>
+            <style>{`
+              @keyframes float-ghost-${ghost.id} {
+                0% {
+                  transform: translateY(0) translateX(0);
+                  opacity: 0;
+                }
+                5% {
+                  opacity: 0.3;
+                }
+                95% {
+                  opacity: 0.3;
+                }
+                100% {
+                  transform: translateY(calc(-100vh - 200px)) translateX(${ghost.drift}px);
+                  opacity: 0;
+                }
+              }
+            `}</style>
           </div>
         ))}
-        <style>{`
-          @keyframes float-ghost {
-            0% {
-              transform: translateY(100vh) translateX(0);
-              opacity: 0;
-            }
-            10% {
-              opacity: 0.2;
-            }
-            90% {
-              opacity: 0.2;
-            }
-            100% {
-              transform: translateY(-100px) translateX(${Math.random() * 40 - 20}px);
-              opacity: 0;
-            }
-          }
-          .animate-float-ghost {
-            animation: float-ghost linear infinite;
-          }
-        `}</style>
       </div>
     );
   }
 
   if (currentTheme === 'fall') {
     return (
-      <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none z-50" style={{ overflow: 'hidden' }}>
         {decorations.map((leaf) => (
           <div
             key={leaf.id}
-            className="absolute animate-fall-leaf"
+            className="absolute"
             style={{
               left: `${leaf.left}%`,
+              top: '-100px',
+              animation: `fall-leaf-${leaf.id} ${leaf.duration}s ease-in-out infinite`,
               animationDelay: `${leaf.delay}s`,
-              animationDuration: `${leaf.duration}s`,
             }}
           >
-            <div
-              className="text-3xl"
-              style={{
-                transform: `rotate(${leaf.rotation}deg)`,
-              }}
-            >
-              🍂
-            </div>
+            <div className="text-2xl opacity-70">{leaf.leafType}</div>
+            <style>{`
+              @keyframes fall-leaf-${leaf.id} {
+                0% {
+                  transform: translateY(0) rotate(${leaf.rotation}deg) translateX(0);
+                  opacity: 0;
+                }
+                5% {
+                  opacity: 0.7;
+                }
+                95% {
+                  opacity: 0.7;
+                }
+                100% {
+                  transform: translateY(calc(100vh + 200px)) rotate(${leaf.rotation + 720}deg) translateX(${leaf.drift}px);
+                  opacity: 0;
+                }
+              }
+            `}</style>
           </div>
         ))}
-        <style>{`
-          @keyframes fall-leaf {
-            0% {
-              transform: translateY(-100px) rotate(0deg);
-              opacity: 0;
-            }
-            10% {
-              opacity: 0.8;
-            }
-            90% {
-              opacity: 0.8;
-            }
-            100% {
-              transform: translateY(100vh) rotate(720deg) translateX(${Math.random() * 100 - 50}px);
-              opacity: 0;
-            }
-          }
-          .animate-fall-leaf {
-            animation: fall-leaf ease-in-out infinite;
-          }
-        `}</style>
       </div>
     );
   }

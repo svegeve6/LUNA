@@ -9,19 +9,19 @@ const SeasonalAvatar = ({ className = "w-12 h-12" }) => {
     switch (currentTheme) {
       case 'halloween':
         return (
-          <div className={`${className} rounded-full bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center text-white shadow-lg shadow-orange-500/30 transition-all duration-300 hover:scale-110`}>
+          <div className={`${className} rounded-full bg-gradient-to-br from-orange-600 to-purple-700 flex items-center justify-center text-white shadow-lg shadow-orange-500/40 transition-all duration-300 hover:scale-110 border-2 border-orange-500/30`}>
             <span className="text-3xl">🎃</span>
           </div>
         );
       case 'christmas':
         return (
-          <div className={`${className} rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white shadow-lg shadow-red-500/30 transition-all duration-300 hover:scale-110`}>
+          <div className={`${className} rounded-full bg-gradient-to-br from-red-600 to-green-700 flex items-center justify-center text-white shadow-lg shadow-red-500/40 transition-all duration-300 hover:scale-110 border-2 border-red-500/40`}>
             <span className="text-3xl">🎅</span>
           </div>
         );
       case 'fall':
         return (
-          <div className={`${className} rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-white shadow-lg shadow-amber-500/30 transition-all duration-300 hover:scale-110`}>
+          <div className={`${className} rounded-full bg-gradient-to-br from-orange-600 to-red-700 flex items-center justify-center text-white shadow-lg shadow-orange-600/40 transition-all duration-300 hover:scale-110 border-2 border-amber-600/40`}>
             <span className="text-3xl">🍁</span>
           </div>
         );
