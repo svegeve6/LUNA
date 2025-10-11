@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAdminSocket } from './contexts/AdminSocket';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { SoundProvider } from './contexts/SoundContext';
 import Dashboard from './components/Dashboard';
 import SessionList from './components/SessionList';
 import Settings from './components/Settings';
@@ -94,9 +95,11 @@ const AppContent = () => {
 export default function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <SoundProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </SoundProvider>
     </ThemeProvider>
   );
 }

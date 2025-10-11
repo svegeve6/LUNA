@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Settings, Activity, User, Phone } from 'lucide-react';
+import { LayoutDashboard, Settings, Activity, User, Phone, Trophy } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import SeasonalAvatar from './SeasonalAvatar';
+import AchievementSystem, { unlockAchievement } from './AchievementSystem';
 
 const MacOSLayout = ({ children, activeView, onViewChange }) => {
   const [pruneJuiceLevel, setPruneJuiceLevel] = useState(0);
   const { userRole } = useAuth();
   const { currentTheme } = useTheme();
+  const [showAchievements, setShowAchievements] = useState(false);
 
   useEffect(() => {
     // Generate deterministic prune juice level based on IP and date
@@ -43,6 +45,17 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
     };
 
     generateDailyPruneJuice();
+
+    // Unlock first login achievement
+    unlockAchievement('first_login');
+
+    // Check for night owl/early bird
+    const hour = new Date().getHours();
+    if (hour >= 0 && hour < 4) {
+      unlockAchievement('night_owl');
+    } else if (hour >= 5 && hour < 7) {
+      unlockAchievement('early_bird');
+    }
   }, []);
 
   // Show different navigation based on user role
@@ -55,13 +68,16 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
   ];
 
   return (
-    <div className="min-h-screen theme-page-bg theme-text-primary flex">
-      {/* Sidebar */}
-      <div className="w-72 theme-primary-bg border-r theme-border flex flex-col relative">
-        {/* User Profile Section */}
-        <div className="p-6 border-b border-gray-800/50">
-          <div className="flex items-center space-x-3">
-            <SeasonalAvatar className="w-12 h-12" />
+    <>
+      {showAchievements && <AchievementSystem onClose={() => setShowAchievements(false)} />}
+
+      <div className="min-h-screen theme-page-bg theme-text-primary flex">
+        {/* Sidebar */}
+        <div className="w-72 theme-primary-bg border-r theme-border flex flex-col relative">
+          {/* User Profile Section */}
+          <div className="p-6 border-b border-gray-800/50">
+            <div className="flex items-center space-x-3">
+              <SeasonalAvatar className="w-12 h-12" />
             <div className="flex-1">
               <div className="font-medium text-white">Luna Panel</div>
               <div className={`text-xs px-2 py-0.5 rounded inline-block mt-1 ${
@@ -92,6 +108,17 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
               <span className="font-medium">{item.label}</span>
             </button>
           ))}
+        </div>
+
+        {/* Achievements Button */}
+        <div className="px-6 pb-3">
+          <button
+            onClick={() => setShowAchievements(true)}
+            className="w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-500/10 to-orange-500/10 hover:from-yellow-500/20 hover:to-orange-500/20 border border-yellow-500/30 text-yellow-400 transition-all duration-200"
+          >
+            <Trophy className="w-4 h-4" />
+            <span className="text-sm font-medium">Achievements</span>
+          </button>
         </div>
 
         {/* Prune Juice Meter */}
@@ -154,15 +181,16 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
             }
           }
         `}</style>
-      </div>
+        </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 bg-[#0F1117] overflow-auto">
-        <div className="relative">
-          {children}
+        {/* Main Content Area */}
+        <div className="flex-1 bg-[#0F1117] overflow-auto">
+          <div className="relative">
+            {children}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

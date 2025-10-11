@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAdminSocket } from '../contexts/AdminSocket';
 import { useTheme } from '../contexts/ThemeContext';
-import { UserPlus, Trash2, Eye, EyeOff, Copy, Check, Phone, Edit2, X, Shield } from 'lucide-react';
+import { UserPlus, Trash2, Eye, EyeOff, Copy, Check, Phone, Edit2, X, Shield, BarChart3, Calendar } from 'lucide-react';
 
-const CallerCard = ({ caller, onDelete, onUpdate }) => {
+const CallerCard = ({ caller, onDelete, onUpdate, sessions }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -11,6 +11,23 @@ const CallerCard = ({ caller, onDelete, onUpdate }) => {
     username: caller.username,
     password: caller.password
   });
+
+  // Calculate session statistics
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const callerSessions = sessions.filter(session =>
+    session.assignedCaller === caller.username
+  );
+
+  const todaySessions = callerSessions.filter(session =>
+    new Date(session.timestamp || session.createdAt) >= todayStart
+  ).length;
+
+  const weekSessions = callerSessions.filter(session =>
+    new Date(session.timestamp || session.createdAt) >= weekStart
+  ).length;
 
   const handleCopy = () => {
     const credentials = `Username: ${caller.username}\nPassword: ${caller.password}`;
@@ -161,6 +178,24 @@ const CallerCard = ({ caller, onDelete, onUpdate }) => {
         </>
       )}
 
+      {/* Session Statistics */}
+      <div className="mt-3 pt-3 border-t border-gray-800/50 grid grid-cols-2 gap-3">
+        <div className="flex items-center space-x-2">
+          <Calendar className="w-4 h-4 text-blue-400" />
+          <div>
+            <p className="text-xs text-gray-500">Today</p>
+            <p className="text-sm font-semibold text-white">{todaySessions}</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <BarChart3 className="w-4 h-4 text-purple-400" />
+          <div>
+            <p className="text-xs text-gray-500">This Week</p>
+            <p className="text-sm font-semibold text-white">{weekSessions}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Last Login Info */}
       {caller.lastLogin && (
         <div className="mt-3 pt-3 border-t border-gray-800/50">
@@ -273,7 +308,7 @@ const CreateCallerForm = ({ onCreate, onCancel }) => {
 };
 
 export default function Callers() {
-  const { callers, addCaller, updateCaller, deleteCaller } = useAdminSocket();
+  const { callers, sessions, addCaller, updateCaller, deleteCaller } = useAdminSocket();
   const { currentTheme } = useTheme();
   const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -377,6 +412,7 @@ export default function Callers() {
             <CallerCard
               key={caller.id}
               caller={caller}
+              sessions={sessions || []}
               onDelete={handleDelete}
               onUpdate={updateCaller}
             />

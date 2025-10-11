@@ -1,11 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { getCurrentMascot } from './MascotSelector';
 
 const SeasonalAvatar = ({ className = "w-12 h-12" }) => {
   const { currentTheme } = useTheme();
+  const [mascot, setMascot] = useState(getCurrentMascot());
+
+  useEffect(() => {
+    const handleMascotChange = () => {
+      setMascot(getCurrentMascot());
+    };
+
+    window.addEventListener('mascotChange', handleMascotChange);
+    return () => window.removeEventListener('mascotChange', handleMascotChange);
+  }, []);
 
   const getAvatarContent = () => {
+    // Seasonal avatars override custom mascots
     switch (currentTheme) {
       case 'halloween':
         return (
@@ -26,6 +38,14 @@ const SeasonalAvatar = ({ className = "w-12 h-12" }) => {
           </div>
         );
       default:
+        // Use custom mascot for default theme
+        if (mascot.emoji) {
+          return (
+            <div className={`${className} rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white transition-all duration-300 hover:scale-110`}>
+              <span className="text-3xl">{mascot.emoji}</span>
+            </div>
+          );
+        }
         return (
           <div className={`${className} rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white transition-all duration-300 hover:scale-110`}>
             <User className="w-6 h-6" />

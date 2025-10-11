@@ -11,6 +11,8 @@ const SeasonalDecorations = () => {
       generateGhosts();
     } else if (currentTheme === 'fall') {
       generateLeaves();
+    } else if (currentTheme === 'christmas') {
+      generateSnowflakes();
     } else {
       setDecorations([]);
     }
@@ -38,6 +40,19 @@ const SeasonalDecorations = () => {
       leafType: ['🍂', '🍁'][Math.floor(Math.random() * 2)],
     }));
     setDecorations(leaves);
+  };
+
+  const generateSnowflakes = () => {
+    const snowflakes = Array.from({ length: 30 }, (_, i) => ({
+      id: `snow-${i}`,
+      left: Math.random() * 100,
+      delay: Math.random() * 5,
+      duration: 8 + Math.random() * 7,
+      drift: Math.random() * 60 - 30,
+      size: 0.5 + Math.random() * 1.5,
+      opacity: 0.3 + Math.random() * 0.7,
+    }));
+    setDecorations(snowflakes);
   };
 
   if (currentTheme === 'halloween') {
@@ -108,6 +123,54 @@ const SeasonalDecorations = () => {
                 }
                 100% {
                   transform: translateY(calc(100vh + 200px)) rotate(${leaf.rotation + 720}deg) translateX(${leaf.drift}px);
+                  opacity: 0;
+                }
+              }
+            `}</style>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (currentTheme === 'christmas') {
+    return (
+      <div className="fixed inset-0 pointer-events-none z-50" style={{ overflow: 'hidden' }}>
+        {decorations.map((snow) => (
+          <div
+            key={snow.id}
+            className="absolute"
+            style={{
+              left: `${snow.left}%`,
+              top: '-50px',
+              animation: `fall-snow-${snow.id} ${snow.duration}s linear infinite`,
+              animationDelay: `${snow.delay}s`,
+              opacity: snow.opacity,
+            }}
+          >
+            <div
+              className="text-white"
+              style={{
+                fontSize: `${snow.size}rem`,
+                filter: 'blur(0.5px)',
+              }}
+            >
+              ❄
+            </div>
+            <style>{`
+              @keyframes fall-snow-${snow.id} {
+                0% {
+                  transform: translateY(0) translateX(0) rotate(0deg);
+                  opacity: 0;
+                }
+                5% {
+                  opacity: ${snow.opacity};
+                }
+                95% {
+                  opacity: ${snow.opacity};
+                }
+                100% {
+                  transform: translateY(calc(100vh + 100px)) translateX(${snow.drift}px) rotate(360deg);
                   opacity: 0;
                 }
               }

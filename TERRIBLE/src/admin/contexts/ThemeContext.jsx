@@ -5,6 +5,7 @@ const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
   const [currentTheme, setCurrentTheme] = useState('lunar');
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     // Initialize theme on mount
@@ -13,15 +14,26 @@ export function ThemeProvider({ children }) {
   }, []);
 
   const changeTheme = (themeName) => {
-    if (themes[themeName]) {
-      applyTheme(themeName);
-      setCurrentTheme(themeName);
+    if (themes[themeName] && themeName !== currentTheme) {
+      setIsTransitioning(true);
+
+      // Wait for fade out
+      setTimeout(() => {
+        applyTheme(themeName);
+        setCurrentTheme(themeName);
+
+        // Fade back in
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 100);
+      }, 300);
     }
   };
 
   const value = {
     currentTheme,
     changeTheme,
+    isTransitioning,
     themes: Object.keys(themes).map(key => ({
       id: key,
       name: themes[key].name
@@ -30,7 +42,9 @@ export function ThemeProvider({ children }) {
 
   return (
     <ThemeContext.Provider value={value}>
-      {children}
+      <div className={`transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+        {children}
+      </div>
     </ThemeContext.Provider>
   );
 }

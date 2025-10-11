@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAdminSocket } from '../contexts/AdminSocket';
-import { Globe, Shield, Bot, Link, FileCode, Palette, Moon, Snowflake, Leaf, Ghost } from 'lucide-react';
+import { Globe, Shield, Bot, Link, FileCode, Palette, Moon, Snowflake, Leaf, Ghost, Volume2, VolumeX, Plus } from 'lucide-react';
 import BannedIPs from './BannedIPs';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSound } from '../contexts/SoundContext';
+import ThemeCreator from './ThemeCreator';
+import MascotSelector from './MascotSelector';
 
 const SettingToggle = ({ icon: Icon, title, description, enabled, onToggle, color }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -216,7 +219,7 @@ const Card = ({ title, children }) => (
   </div>
 );
 
-const ThemeSelector = () => {
+const ThemeSelector = ({ onOpenCreator }) => {
   const { currentTheme, changeTheme, themes } = useTheme();
 
   const themeIcons = {
@@ -290,6 +293,13 @@ const ThemeSelector = () => {
                 </button>
               );
             })}
+            <button
+              onClick={onOpenCreator}
+              className="p-2 rounded-lg theme-hover-bg hover:scale-110 transition-all duration-200"
+              title="Create Custom Theme"
+            >
+              <Plus className="w-4 h-4 theme-text-muted hover:theme-accent" />
+            </button>
           </div>
         </div>
       </div>
@@ -299,19 +309,48 @@ const ThemeSelector = () => {
 
 export default function Settings() {
   const { settings, updateSettings } = useAdminSocket();
+  const { soundEnabled, toggleSound } = useSound();
+  const [showThemeCreator, setShowThemeCreator] = useState(false);
 
   const handleToggle = (key) => {
     updateSettings({ ...settings, [key]: !settings[key] });
   };
 
+  const handleSaveCustomTheme = (themeId, themeData) => {
+    // Save custom theme to localStorage
+    const customThemes = JSON.parse(localStorage.getItem('customThemes') || '{}');
+    customThemes[themeId] = themeData;
+    localStorage.setItem('customThemes', JSON.stringify(customThemes));
+
+    setShowThemeCreator(false);
+    alert(`Theme "${themeData.name}" saved! Reload the page to see it in the theme list.`);
+  };
+
   return (
-    <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-6 px-4 lg:px-0">
-      {/* Main Settings Column */}
-      <div className="lg:col-span-8 space-y-6">
-        {/* Appearance Card */}
-        <Card title="Appearance">
-          <ThemeSelector />
-        </Card>
+    <>
+      {showThemeCreator && (
+        <ThemeCreator
+          onClose={() => setShowThemeCreator(false)}
+          onSave={handleSaveCustomTheme}
+        />
+      )}
+
+      <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-6 px-4 lg:px-0">
+        {/* Main Settings Column */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* Appearance Card */}
+          <Card title="Appearance">
+            <ThemeSelector onOpenCreator={() => setShowThemeCreator(true)} />
+            <MascotSelector />
+            <SettingToggle
+              icon={soundEnabled ? Volume2 : VolumeX}
+              title="Theme Sounds"
+              description="Play ambient sounds for seasonal themes"
+              enabled={soundEnabled}
+              onToggle={toggleSound}
+              color="purple"
+            />
+          </Card>
 
         {/* Security Settings Card */}
         <Card title="Security Settings">
