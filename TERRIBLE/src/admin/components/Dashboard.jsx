@@ -27,7 +27,7 @@ const StatCard = ({ icon: Icon, title, value, secondary, type = 'default' }) => 
 
   return (
     <div
-      className="group relative rounded-xl overflow-hidden bg-[#161A22] border border-gray-800/50"
+      className="group relative rounded-xl overflow-hidden theme-primary-bg border theme-border"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

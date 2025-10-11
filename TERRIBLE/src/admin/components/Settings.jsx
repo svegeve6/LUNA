@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAdminSocket } from '../contexts/AdminSocket';
-import { Globe, Shield, Bot, Link, FileCode } from 'lucide-react';
+import { Globe, Shield, Bot, Link, FileCode, Palette, Moon, Snowflake, Leaf, Ghost } from 'lucide-react';
 import BannedIPs from './BannedIPs';
+import { useTheme } from '../contexts/ThemeContext';
 
 const SettingToggle = ({ icon: Icon, title, description, enabled, onToggle, color }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -201,10 +202,10 @@ const InputField = ({ icon: Icon, label, value, onChange, type = 'text' }) => {
 };
 
 const Card = ({ title, children }) => (
-  <div className="relative rounded-xl overflow-hidden bg-[#161A22] border border-gray-800/50">
+  <div className="relative rounded-xl overflow-hidden theme-primary-bg border theme-border">
     <div className="relative">
-      <div className="px-4 py-3 border-b border-gray-800/50">
-        <h2 className="text-lg font-medium text-gray-300">
+      <div className="px-4 py-3 border-b theme-border">
+        <h2 className="text-lg font-medium theme-text-secondary">
           {title}
         </h2>
       </div>
@@ -214,6 +215,87 @@ const Card = ({ title, children }) => (
     </div>
   </div>
 );
+
+const ThemeSelector = () => {
+  const { currentTheme, changeTheme, themes } = useTheme();
+
+  const themeIcons = {
+    lunar: Moon,
+    halloween: Ghost,
+    fall: Leaf,
+    christmas: Snowflake
+  };
+
+  const themeColors = {
+    lunar: 'blue',
+    halloween: 'orange',
+    fall: 'amber',
+    christmas: 'red'
+  };
+
+  return (
+    <div className="px-4 py-3.5">
+      <div className="flex items-start space-x-3">
+        <Palette className="w-5 h-5 mt-1 theme-accent" />
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium theme-text-primary">
+                Theme
+              </h3>
+              <p className="text-xs theme-text-muted mt-1">
+                Choose your visual theme
+              </p>
+            </div>
+            <select
+              value={currentTheme}
+              onChange={(e) => changeTheme(e.target.value)}
+              className="px-3 py-1.5 text-sm rounded-lg border
+                       theme-secondary-bg theme-border theme-text-primary
+                       focus:outline-none focus:ring-2 focus:ring-opacity-50
+                       transition-all duration-200"
+              style={{ minWidth: '140px' }}
+            >
+              {themes.map(theme => {
+                const Icon = themeIcons[theme.id];
+                return (
+                  <option key={theme.id} value={theme.id}>
+                    {theme.name}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+          <div className="mt-3 flex items-center space-x-2">
+            {themes.map(theme => {
+              const Icon = themeIcons[theme.id];
+              const isActive = currentTheme === theme.id;
+              return (
+                <button
+                  key={theme.id}
+                  onClick={() => changeTheme(theme.id)}
+                  className={`
+                    p-2 rounded-lg transition-all duration-200
+                    ${isActive
+                      ? 'theme-accent-bg ring-2 ring-offset-2 ring-offset-transparent'
+                      : 'theme-hover-bg hover:scale-110'
+                    }
+                  `}
+                  style={{
+                    '--tw-ring-color': isActive ? 'var(--accent)' : 'transparent'
+                  }}
+                  title={theme.name}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'theme-accent' : 'theme-text-muted'}`} />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function Settings() {
   const { settings, updateSettings } = useAdminSocket();
@@ -226,6 +308,11 @@ export default function Settings() {
     <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-6 px-4 lg:px-0">
       {/* Main Settings Column */}
       <div className="lg:col-span-8 space-y-6">
+        {/* Appearance Card */}
+        <Card title="Appearance">
+          <ThemeSelector />
+        </Card>
+
         {/* Security Settings Card */}
         <Card title="Security Settings">
           <SettingToggle

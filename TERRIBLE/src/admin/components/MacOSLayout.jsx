@@ -21,9 +21,9 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0F1117] text-gray-100 flex">
+    <div className="min-h-screen theme-page-bg theme-text-primary flex">
       {/* Sidebar */}
-      <div className="w-72 bg-[#161A22] border-r border-gray-800/50 flex flex-col">
+      <div className="w-72 theme-primary-bg border-r theme-border flex flex-col">
         {/* User Profile Section */}
         <div className="p-6 border-b border-gray-800/50">
           <div className="flex items-center space-x-3">

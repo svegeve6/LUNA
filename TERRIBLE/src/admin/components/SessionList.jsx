@@ -945,7 +945,7 @@ const SessionList = ({ userRole }) => {
 
   return (
     <div className="mt-6">
-      <div className="relative rounded-xl overflow-hidden bg-[#161A22] border border-gray-800/50">
+      <div className="relative rounded-xl overflow-hidden theme-primary-bg border theme-border">
 
         <div className="relative">
           <div className="px-6 py-4 border-b border-gray-800/50">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAdminSocket } from './contexts/AdminSocket';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import Dashboard from './components/Dashboard';
 import SessionList from './components/SessionList';
 import Settings from './components/Settings';
@@ -9,6 +10,7 @@ import BannedIPs from './components/BannedIPs';
 import LoginPage from './pages/LoginPage';
 import MacOSLayout from './components/MacOSLayout';
 import { LogOut } from 'lucide-react';
+import './styles/themes.css';
 
 const AppContent = () => {
   const { isConnected } = useAdminSocket();
@@ -31,10 +33,10 @@ const AppContent = () => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A]">
+      <div className="min-h-screen flex items-center justify-center theme-page-bg">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-100 mb-2">Connecting to server...</h1>
-          <p className="text-gray-400">Please wait while we establish connection</p>
+          <h1 className="text-2xl font-bold theme-text-primary mb-2">Connecting to server...</h1>
+          <p className="theme-text-secondary">Please wait while we establish connection</p>
         </div>
       </div>
     );
@@ -85,8 +87,10 @@ const AppContent = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
