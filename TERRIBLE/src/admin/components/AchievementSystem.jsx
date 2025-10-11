@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, X, Lock, Star, Zap, Target, Award, CheckCircle } from 'lucide-react';
+import { Trophy, X, Lock, Star, Zap, Target, Award, CheckCircle, Moon, Sun, Palette } from 'lucide-react';
 
 const achievements = [
   {
@@ -219,6 +219,3 @@ export const updateAchievementProgress = (achievementId, progress) => {
   progressData[achievementId] = progress;
   localStorage.setItem('achievementProgress', JSON.stringify(progressData));
 };
-
-// Missing imports for icons
-import { Moon, Sun, Palette } from 'lucide-react';

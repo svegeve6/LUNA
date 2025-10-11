@@ -36,6 +36,8 @@ export function SoundProvider({ children }) {
       });
 
       setAudio(newAudio);
+    } else {
+      setAudio(null);
     }
 
     // Cleanup on unmount
@@ -44,6 +46,7 @@ export function SoundProvider({ children }) {
         audio.pause();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTheme, soundEnabled]);
 
   const toggleSound = () => {
