@@ -448,16 +448,13 @@ const CategorizedPageSelect = ({ selectedPage = 'loading.html', onPageChange, is
           transform: 'translate3d(0, 0, 0)',
           transformOrigin: 'top'
         }}
-        className={`
-          relative text-xs rounded-lg border w-full
-          transition-all duration-300
-          ${isHovered ? 'bg-white/[0.08] border-white/20' : 'bg-white/[0.05] border-white/10'}
-          text-white/80 py-1 px-2
-          backdrop-blur-sm
-          focus:outline-none focus:border-blue-500/30 focus:ring-1 focus:ring-blue-500/20
-          shadow-lg shadow-black/5
-          z-50
-        `}
+        className="relative text-xs rounded-lg border w-full
+                   transition-all duration-300
+                   bg-white/[0.05] border-white/10 hover:bg-white/[0.08] hover:border-white/20
+                   text-white/80 py-1 px-2
+                   focus:outline-none focus:border-blue-500/30 focus:ring-1 focus:ring-blue-500/20
+                   shadow-lg shadow-black/5
+                   z-50"
       >
         {Object.entries(pageCategories).map(([category, pages]) => (
           <optgroup key={category} label={category} className="bg-[#1A1A1A] text-white/60">
@@ -661,10 +658,7 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
         hover:shadow-[0_8px_16px_-6px_rgba(0,0,0,0.2)]
       `}
     >
-      <div className="absolute inset-0 bg-white/[0.01] backdrop-blur-sm pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent
-                     transition-opacity duration-500 opacity-0 group-hover:opacity-100 pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent
                      transition-opacity duration-500 opacity-0 group-hover:opacity-100 pointer-events-none" />
 
       <div className="relative grid grid-cols-12 gap-4 items-center">
@@ -742,11 +736,6 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
         </div>
 
         <div className="col-span-2 flex items-center justify-end space-x-1">
-          <div className="absolute inset-0 rounded-lg transition-opacity duration-300
-                        opacity-0 group-hover:opacity-100 pointer-events-none">
-            <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-sm rounded-lg" />
-            <div className="absolute inset-0 bg-gradient-to-r from-white/[0.02] to-transparent rounded-lg" />
-          </div>
 
           <CategorizedPageSelect
             selectedPage={selectedPage}
@@ -759,7 +748,7 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
             onClick={() => onRedirect(session.id, selectedPage)}
             className={`relative p-1.5 rounded-lg transition-all duration-300 group/btn
                      hover:bg-white/[0.08] text-blue-400 hover:text-blue-300
-                     backdrop-blur-sm shadow-lg shadow-black/5 active:scale-95`}
+                     shadow-lg shadow-black/5 active:scale-95`}
           >
             <ExternalLink className="w-4 h-4 transition-transform duration-300
                                     group-hover:scale-110" />
@@ -771,7 +760,7 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
                 onClick={() => onRemove(session.id)}
                 className={`relative p-1.5 rounded-lg transition-all duration-300 group/btn
                          hover:bg-white/[0.08] text-orange-400 hover:text-orange-300
-                         backdrop-blur-sm shadow-lg shadow-black/5 active:scale-95`}
+                         shadow-lg shadow-black/5 active:scale-95`}
               >
                 <Trash2 className="w-4 h-4 transition-transform duration-300
                                   group-hover:scale-110" />
@@ -781,7 +770,7 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
                 onClick={() => onBan(session.ip)}
                 className={`relative p-1.5 rounded-lg transition-all duration-300 group/btn
                          hover:bg-white/[0.08] text-red-400 hover:text-red-300
-                         backdrop-blur-sm shadow-lg shadow-black/5 active:scale-95`}
+                         shadow-lg shadow-black/5 active:scale-95`}
               >
                 <Ban className="w-4 h-4 transition-transform duration-300
                               group-hover:scale-110" />
@@ -797,7 +786,7 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
                     onClick={() => unassignSession(session.id)}
                     className={`relative p-1.5 rounded-lg transition-all duration-300 group/btn
                              hover:bg-white/[0.08] text-purple-400 hover:text-purple-300
-                             backdrop-blur-sm shadow-lg shadow-black/5 active:scale-95`}
+                             shadow-lg shadow-black/5 active:scale-95`}
                     title="Unassign"
                   >
                     <UserX className="w-3.5 h-3.5 transition-transform duration-300
@@ -809,7 +798,7 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
                   onClick={() => onAssignClick(session)}
                   className={`relative p-1.5 rounded-lg transition-all duration-300 group/btn
                            hover:bg-white/[0.08] text-purple-400 hover:text-purple-300
-                           backdrop-blur-sm shadow-lg shadow-black/5 active:scale-95`}
+                           shadow-lg shadow-black/5 active:scale-95`}
                   title="Assign Caller"
                 >
                   <UserPlus className="w-3.5 h-3.5 transition-transform duration-300
