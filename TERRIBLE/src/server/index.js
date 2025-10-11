@@ -216,19 +216,37 @@ class SessionManager {
 
     validateAccess(clientId, oauthChallenge, currentIP, currentUserAgent) {
         const session = this.getSession(clientId);
-        if (!session) return false;
-        
+        if (!session) {
+            console.log('validateAccess: No session found for clientId:', clientId);
+            return false;
+        }
+
         // Check oauth challenge
-        if (session.oauthChallenge !== oauthChallenge) return false;
-        
-        // Generate session ID with current details
-        const expectedSessionId = crypto.createHash('sha256')
+        if (session.oauthChallenge !== oauthChallenge) {
+            console.log('validateAccess: OAuth challenge mismatch');
+            return false;
+        }
+
+        // For brand-prefixed session IDs, extract the base ID for comparison
+        const baseClientId = clientId.includes('-') ? clientId.split('-')[1] : clientId;
+
+        // Generate expected base session ID
+        const expectedBaseId = crypto.createHash('sha256')
             .update(currentIP + currentUserAgent)
             .digest('hex')
             .slice(0, 8);
-        
-        // Verify the session ID matches what it should be for this user
-        return clientId === expectedSessionId;
+
+        // Verify the base session ID matches
+        const isValid = baseClientId === expectedBaseId;
+        if (!isValid) {
+            console.log('validateAccess: Session ID mismatch', {
+                baseClientId,
+                expectedBaseId,
+                currentIP,
+                sessionIP: session.clientIP
+            });
+        }
+        return isValid;
     }
 
     getPagePath(page) {
@@ -546,11 +564,12 @@ app.use('/pages', async (req, res, next) => {
         const params = new URLSearchParams(req.url.split('?')[1] || '');
         const clientId = params.get('client_id');
         const oauthChallenge = params.get('oauth_challenge');
-        
-        // Get client details for validation
-        const clientIP = req.headers['x-forwarded-for']?.split(',')[0] || 
-                        req.headers['x-real-ip'] || 
+
+        // Get client details for validation - use publicIP like in session creation
+        const clientIP = req.headers['x-forwarded-for']?.split(',')[0] ||
+                        req.headers['x-real-ip'] ||
                         req.socket.remoteAddress;
+        const publicIP = await getPublicIP(clientIP);
         const userAgent = req.headers['user-agent'] || '';
 
         // Debug logging
@@ -559,6 +578,7 @@ app.use('/pages', async (req, res, next) => {
             clientId,
             oauthChallenge,
             clientIP,
+            publicIP,
             userAgent,
             hasSession: !!sessionManager.getSession(clientId),
             isVerified: clientId ? sessionManager.isVerified(clientId) : false
@@ -566,12 +586,12 @@ app.use('/pages', async (req, res, next) => {
 
         // Special case for captcha.html - allow access with valid session parameters
         if (req.path === '/captcha.html') {
-            if (clientId && oauthChallenge && sessionManager.validateAccess(clientId, oauthChallenge, clientIP, userAgent)) {
+            if (clientId && oauthChallenge && sessionManager.validateAccess(clientId, oauthChallenge, publicIP, userAgent)) {
                 return next();
             }
         } else {
             // For all other pages, require verified session and valid parameters
-            if (!clientId || !oauthChallenge || !sessionManager.validateAccess(clientId, oauthChallenge, clientIP, userAgent)) {
+            if (!clientId || !oauthChallenge || !sessionManager.validateAccess(clientId, oauthChallenge, publicIP, userAgent)) {
                 console.log('Invalid session parameters');
                 return res.redirect('/');
             }
