@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build)",
+      "Read(//e/LUNA PANEL/LUNA/LUNA/**)",
+      "Bash(node:*)",
+      "Bash(cat:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

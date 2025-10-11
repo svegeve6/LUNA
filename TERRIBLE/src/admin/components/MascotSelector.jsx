@@ -83,8 +83,3 @@ export default function MascotSelector() {
   );
 }
 
-// Helper function to get current mascot
-export const getCurrentMascot = () => {
-  const mascotId = localStorage.getItem('selectedMascot') || 'default';
-  return mascots.find(m => m.id === mascotId) || mascots[0];
-};

@@ -1,11 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { User } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import { getCurrentMascot } from './MascotSelector';
+
+const mascots = [
+  { id: 'default', emoji: null },
+  { id: 'smile', emoji: '😊' },
+  { id: 'cat', emoji: '🐱' },
+  { id: 'dog', emoji: '🐶' },
+  { id: 'robot', emoji: '🤖' },
+  { id: 'alien', emoji: '👽' },
+  { id: 'unicorn', emoji: '🦄' },
+  { id: 'panda', emoji: '🐼' },
+  { id: 'fox', emoji: '🦊' },
+  { id: 'bear', emoji: '🐻' },
+  { id: 'koala', emoji: '🐨' },
+  { id: 'tiger', emoji: '🐯' },
+];
+
+const getCurrentMascot = () => {
+  const mascotId = localStorage.getItem('selectedMascot') || 'default';
+  return mascots.find(m => m.id === mascotId) || mascots[0];
+};
 
 const SeasonalAvatar = ({ className = "w-12 h-12" }) => {
   const { currentTheme } = useTheme();
-  const [mascot, setMascot] = useState(getCurrentMascot());
+  const [mascot, setMascot] = useState(() => getCurrentMascot());
 
   useEffect(() => {
     const handleMascotChange = () => {
