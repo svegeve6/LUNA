@@ -104,6 +104,11 @@ function AdminSocketProvider({ children }) {
       ));
     });
 
+    newSocket.on('assignment_error', ({ error }) => {
+      console.error('Assignment error:', error);
+      alert(error); // Simple alert for now, can be replaced with better notification
+    });
+
     newSocket.on('assignments_cleared', ({ caller, count }) => {
       console.log(`Assignments cleared for ${caller}: ${count} sessions`);
       setSessions(prev => prev.map(session =>
