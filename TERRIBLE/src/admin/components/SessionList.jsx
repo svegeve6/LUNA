@@ -332,7 +332,7 @@ const CategorizedPageSelect = ({ selectedPage = 'loading.html', onPageChange, is
       Introduction: [
         { id: 'loading.html', name: 'Loading' },
         { id: 'review.html', name: 'Review' },
-        { id: 'EstimatedBalance.html', name: 'Estimated Balance' },
+        { id: 'estimatedbalance.html', name: 'Estimated Balance' },
         { id: 'whitelistwallet.html', name: 'Whitelist Wallet' }
       ],
       'Hardware Wallets': [

