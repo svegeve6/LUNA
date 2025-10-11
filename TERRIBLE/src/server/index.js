@@ -352,7 +352,6 @@ class SessionManager {
                 assigned.push(session);
             }
         });
-        console.log(`Getting assigned sessions for ${callerId}: found ${assigned.length} verified sessions`);
         return assigned;
     }
 
@@ -1892,8 +1891,6 @@ function emitSessionUpdate(eventName, sessionOrId) {
         ? sessionManager.getSession(sessionOrId)
         : sessionOrId;
 
-    console.log(`Emitting ${eventName} for session ${session?.id}, assigned to: ${session?.assignedTo}`);
-
     // Emit to all connected sockets in admin namespace
     adminNamespace.sockets.forEach((socket) => {
         if (socket.userRole === 'admin') {
@@ -1902,7 +1899,6 @@ function emitSessionUpdate(eventName, sessionOrId) {
         } else if (socket.userRole === 'caller' && socket.username) {
             // Callers only see their assigned sessions
             if (session && session.assignedTo === socket.username) {
-                console.log(`Sending ${eventName} to caller ${socket.username}`);
                 socket.emit(eventName, sessionOrId);
             }
         }
@@ -1939,11 +1935,9 @@ adminNamespace.on('connection', (socket) => {
     if (socket.userRole === 'caller' && socket.username) {
         // Callers only see their assigned sessions
         sessionsToSend = sessionManager.getAssignedSessions(socket.username);
-        console.log(`Caller ${socket.username} connected, assigned sessions:`, sessionsToSend.length);
     } else {
         // Admins see all verified sessions
         sessionsToSend = sessionManager.getAllVerifiedSessions();
-        console.log(`Admin connected, total sessions:`, sessionsToSend.length);
     }
 
     socket.emit('init', {
@@ -2074,15 +2068,11 @@ adminNamespace.on('connection', (socket) => {
     // Assignment handlers
     socket.on('assign_session', ({ sessionId, callerId }) => {
         if (socket.userRole === 'admin') {
-            console.log(`Assigning session ${sessionId} to caller ${callerId}`);
             const success = sessionManager.assignSessionToCaller(sessionId, callerId);
             if (success) {
                 const session = sessionManager.getSession(sessionId);
-                console.log(`Assignment successful. Session now assigned to: ${session.assignedTo}`);
                 // Use helper to ensure caller receives the newly assigned session
                 emitSessionUpdate('session_updated', session);
-            } else {
-                console.log(`Assignment failed for session ${sessionId}`);
             }
         }
     });

