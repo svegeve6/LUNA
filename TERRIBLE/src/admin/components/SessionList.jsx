@@ -919,9 +919,7 @@ const SessionList = ({ userRole }) => {
     });
   };
 
-  const handleAssignCaller = (sessionId, callerUsername, alias) => {
-    // Set the alias first, then assign the session
-    setServerAlias(sessionId, alias);
+  const handleAssignCaller = (sessionId, callerUsername) => {
     assignSession(sessionId, callerUsername);
     setAssignModal({
       isOpen: false,

