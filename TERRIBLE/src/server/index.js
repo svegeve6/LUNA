@@ -712,7 +712,8 @@ const state = {
         antiBotEnabled: true,
         defaultLandingPage: 'geminiloading.html',
         captchaEnabled: false,
-        availablePages: []
+        availablePages: [],
+        theme: 'lunar' // Global theme setting
     },
     sessions: new Map(),
     bannedIPs: new Set(ipManager.getAllBannedIPs()),
