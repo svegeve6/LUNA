@@ -3,13 +3,15 @@ import { X, UserCheck, Users } from 'lucide-react';
 
 const AssignCallerModal = ({ isOpen, onClose, session, callers, onAssign }) => {
   const [selectedCaller, setSelectedCaller] = useState('');
-  const [alias, setAlias] = useState('');
+  const [alias, setAlias] = useState(session?.alias || '');
 
   if (!isOpen) return null;
 
   const handleAssign = () => {
-    if (selectedCaller && alias.trim()) {
-      onAssign(session.id, selectedCaller, alias.trim());
+    // Use existing alias if present, otherwise require a new one
+    const finalAlias = session?.alias || alias.trim();
+    if (selectedCaller && finalAlias) {
+      onAssign(session.id, selectedCaller, finalAlias);
       onClose();
       setSelectedCaller('');
       setAlias('');
@@ -58,19 +60,21 @@ const AssignCallerModal = ({ isOpen, onClose, session, callers, onAssign }) => {
         {/* Alias Input */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Alias <span className="text-red-400">*</span>
+            Alias {!session?.alias && <span className="text-red-400">*</span>}
           </label>
           <input
             type="text"
             value={alias}
             onChange={(e) => setAlias(e.target.value)}
-            placeholder="Enter an alias for this session"
+            placeholder={session?.alias ? `Current: ${session.alias} (optional)` : "Enter an alias for this session"}
             className="w-full px-3 py-2 bg-[#1C2029] border border-gray-800/50 rounded-lg
                      text-white placeholder-gray-500 focus:border-purple-500/50
                      focus:outline-none focus:ring-1 focus:ring-purple-500/30 transition-all"
           />
           <p className="text-xs text-gray-500 mt-1">
-            This alias will help identify the session
+            {session?.alias
+              ? `Current alias: "${session.alias}". Leave empty to keep it.`
+              : "This alias will help identify the session"}
           </p>
         </div>
 
@@ -138,18 +142,18 @@ const AssignCallerModal = ({ isOpen, onClose, session, callers, onAssign }) => {
           </button>
           <button
             onClick={handleAssign}
-            disabled={!selectedCaller || !alias.trim() || callers.length === 0}
+            disabled={!selectedCaller || (!session?.alias && !alias.trim()) || callers.length === 0}
             className={`
               px-4 py-2 text-sm font-medium rounded-lg transition-colors
               flex items-center space-x-2
-              ${selectedCaller && alias.trim() && callers.length > 0
+              ${selectedCaller && (session?.alias || alias.trim()) && callers.length > 0
                 ? 'bg-purple-500 hover:bg-purple-600 text-white'
                 : 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
               }
             `}
           >
             <UserCheck className="w-4 h-4" />
-            <span>Assign</span>
+            <span>Assign Now</span>
           </button>
         </div>
       </div>
