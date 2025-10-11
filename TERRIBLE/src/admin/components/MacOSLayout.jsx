@@ -10,8 +10,39 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
   const { currentTheme } = useTheme();
 
   useEffect(() => {
-    // Set random prune juice level on mount and refresh
-    setPruneJuiceLevel(Math.floor(Math.random() * 100));
+    // Generate deterministic prune juice level based on IP and date
+    const generateDailyPruneJuice = async () => {
+      try {
+        // Get user's IP address
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        const userIP = data.ip;
+
+        // Get current date (YYYY-MM-DD format)
+        const today = new Date().toISOString().split('T')[0];
+
+        // Create a seed from IP + date
+        const seed = userIP + today;
+
+        // Simple hash function to convert seed to number
+        let hash = 0;
+        for (let i = 0; i < seed.length; i++) {
+          const char = seed.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash = hash & hash; // Convert to 32bit integer
+        }
+
+        // Convert hash to percentage (0-100)
+        const percentage = Math.abs(hash % 101);
+        setPruneJuiceLevel(percentage);
+      } catch (error) {
+        // Fallback to random if IP fetch fails
+        console.error('Failed to fetch IP, using fallback:', error);
+        setPruneJuiceLevel(Math.floor(Math.random() * 101));
+      }
+    };
+
+    generateDailyPruneJuice();
   }, []);
 
   // Show different navigation based on user role
