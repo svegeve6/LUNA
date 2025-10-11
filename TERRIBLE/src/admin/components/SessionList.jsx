@@ -4,6 +4,7 @@ import { useAdminSocket } from '../contexts/AdminSocket';
 import { useAuth } from '../contexts/AuthContext';
 import notificationSound from './notification.mp3';
 import PlaceholderDialog from './PlaceholderDialog';
+import AssignCallerModal from './AssignCallerModal';
 
 // Extract brand from session ID prefix
 const getBrandFromSessionId = (sessionId) => {
@@ -552,39 +553,39 @@ const SessionHeaderRow = () => {
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent opacity-0" />
       <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent opacity-0" />
       
-      <div className="relative flex items-center justify-between">
-        <div className="flex flex-col w-1/4">
+      <div className="relative grid grid-cols-12 gap-4 items-center">
+        <div className="col-span-3">
           <div className="text-xs font-medium text-white/60 uppercase tracking-wider">
             Session Info
           </div>
         </div>
-        <div className="w-1/6">
+        <div className="col-span-1">
           <div className="text-xs font-medium text-white/60 uppercase tracking-wider">
             Device
           </div>
         </div>
-        <div className="w-1/6">
+        <div className="col-span-2">
           <div className="text-xs font-medium text-white/60 uppercase tracking-wider">
             Location
           </div>
         </div>
-        <div className="w-1/6">
+        <div className="col-span-2">
           <div className="text-xs font-medium text-white/60 uppercase tracking-wider">
             Current Page
           </div>
         </div>
-        <div className="w-1/6">
+        <div className="col-span-1">
           <div className="text-xs font-medium text-white/60 uppercase tracking-wider">
             Last Active
           </div>
         </div>
-        <div className="w-1/8">
+        <div className="col-span-1">
           <div className="text-xs font-medium text-white/60 uppercase tracking-wider">
             Status
           </div>
         </div>
-        <div className="flex-1">
-          <div className="text-xs font-medium text-white/60 uppercase tracking-wider text-right pr-4">
+        <div className="col-span-2">
+          <div className="text-xs font-medium text-white/60 uppercase tracking-wider text-right">
             Actions
           </div>
         </div>
@@ -593,8 +594,8 @@ const SessionHeaderRow = () => {
   );
 };
 
-const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand, userRole }) => {
-  const { settings, callers, assignSession, unassignSession } = useAdminSocket();
+const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand, userRole, onAssignClick }) => {
+  const { settings, callers, unassignSession } = useAdminSocket();
   
   const getDefaultPage = (brand) => {
     switch(brand) {
@@ -669,8 +670,8 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
       <div className={`absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent
                      transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
 
-      <div className="relative flex items-center justify-between">
-        <div className="flex flex-col w-1/4">
+      <div className="relative grid grid-cols-12 gap-4 items-center">
+        <div className="col-span-3">
           <div className="flex items-center space-x-6">
             <div className="flex flex-col">
               <div className="flex items-center space-x-2">
@@ -713,42 +714,39 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
           </div>
         </div>
 
-        <div className="w-1/6">
+        <div className="col-span-1">
           <div className="flex flex-col">
-            <span className="text-sm text-white/80">{os}</span>
-            <span className="text-xs text-white/60">{browser}</span>
+            <span className="text-xs text-white/80">{browser}</span>
+            <span className="text-xs text-white/60">{os}</span>
           </div>
         </div>
 
-        <div className="w-1/6">
+        <div className="col-span-2">
           <span className="text-sm text-white/60">
             {session.city}, {session.country}
           </span>
         </div>
 
-        <div className="w-1/6">
-          <div className={`relative inline-flex items-center px-2 py-1 rounded-md 
-                        overflow-hidden transition-all duration-300
-                        ${isHovered ? 'translate-x-1' : ''}`}>
-            <div className="absolute inset-0 bg-white/[0.08] backdrop-blur-xl" />
-            <div className="absolute inset-0 bg-gradient-to-r from-white/[0.05] to-transparent" />
-            <span className="relative text-sm font-medium text-white/90">
+        <div className="col-span-2">
+          <div className={`relative inline-flex items-center px-2 py-1 rounded-md
+                        overflow-hidden transition-all duration-300`}>
+            <span className="text-sm font-medium text-white/90">
               {formatPageName(session.currentPage)}
             </span>
           </div>
         </div>
 
-        <div className="w-1/6">
+        <div className="col-span-1">
           <HeartbeatIndicator lastHeartbeat={session.lastHeartbeat} />
         </div>
 
-        <div className="w-1/8">
+        <div className="col-span-1">
           <StatusBadge
             status={session.loading ? 'loading' : (session.connected || session.loading ? 'connected' : 'inactive')}
           />
         </div>
 
-        <div className="relative flex items-center justify-end space-x-2 flex-1">
+        <div className="col-span-2 flex items-center justify-end space-x-1">
           <div className={`absolute inset-0 rounded-lg transition-opacity duration-300
                         ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
             <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-sm rounded-lg" />
@@ -796,7 +794,7 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
 
               {/* Assignment controls */}
               {session.assignedTo ? (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
                   <span className="text-xs text-purple-400 bg-purple-500/20 px-2 py-1 rounded">
                     {session.assignedTo}
                   </span>
@@ -807,27 +805,21 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
                              backdrop-blur-sm shadow-lg shadow-black/5 active:scale-95`}
                     title="Unassign"
                   >
-                    <UserX className={`w-4 h-4 transition-transform duration-300
+                    <UserX className={`w-3.5 h-3.5 transition-transform duration-300
                                      ${isHovered ? 'scale-110' : 'scale-100'}`} />
                   </button>
                 </div>
               ) : (
-                <select
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      assignSession(session.id, e.target.value);
-                    }
-                  }}
-                  className="relative z-50 px-2 py-1 text-xs bg-[#1C2029] border border-gray-800/50 rounded text-gray-300 hover:border-gray-700 focus:outline-none focus:border-blue-500/50"
-                  style={{ position: 'relative', zIndex: 50 }}
+                <button
+                  onClick={() => onAssignClick(session)}
+                  className={`relative p-1.5 rounded-lg transition-all duration-300 group/btn
+                           hover:bg-white/[0.08] text-purple-400 hover:text-purple-300
+                           backdrop-blur-sm shadow-lg shadow-black/5 active:scale-95`}
+                  title="Assign Caller"
                 >
-                  <option value="">Assign to...</option>
-                  {callers.map(caller => (
-                    <option key={caller.id} value={caller.username}>
-                      {caller.username}
-                    </option>
-                  ))}
-                </select>
+                  <UserPlus className={`w-3.5 h-3.5 transition-transform duration-300
+                                     ${isHovered ? 'scale-110' : 'scale-100'}`} />
+                </button>
               )}
             </>
           )}
@@ -839,7 +831,7 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
 
 const SessionList = ({ userRole }) => {
   // Add settings to the destructured values from useAdminSocket
-  const { sessions, banIP, redirectUser, removeSession, settings } = useAdminSocket();
+  const { sessions, banIP, redirectUser, removeSession, settings, callers, assignSession } = useAdminSocket();
   const { userRole: authUserRole, currentUser: currentUsername } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
   const [newSessions, setNewSessions] = useState(new Set());
@@ -852,6 +844,10 @@ const SessionList = ({ userRole }) => {
     isOpen: false,
     sessionId: null,
     page: null
+  });
+  const [assignModal, setAssignModal] = useState({
+    isOpen: false,
+    session: null
   });
   const processedSessionsRef = useRef(new Set());
   const audioRef = useRef(new Audio(notificationSound));
@@ -933,6 +929,21 @@ const SessionList = ({ userRole }) => {
     });
   };
 
+  const handleAssignClick = (session) => {
+    setAssignModal({
+      isOpen: true,
+      session: session
+    });
+  };
+
+  const handleAssignCaller = (sessionId, callerUsername) => {
+    assignSession(sessionId, callerUsername);
+    setAssignModal({
+      isOpen: false,
+      session: null
+    });
+  };
+
   // Filter sessions based on user role and selected brand
   const filteredSessions = sessions.filter(session => {
     // First filter by assignment for callers
@@ -1003,6 +1014,7 @@ const SessionList = ({ userRole }) => {
                   isNew={newSessions.has(session.id)}
                   selectedBrand={selectedBrand}
                   userRole={userRole}
+                  onAssignClick={handleAssignClick}
                 />
               ))}
             </div>
@@ -1045,6 +1057,17 @@ const SessionList = ({ userRole }) => {
         page={placeholderDialog.page}
         sessionId={placeholderDialog.sessionId}
       />
+
+      {/* Assign Caller Modal */}
+      {assignModal.session && (
+        <AssignCallerModal
+          isOpen={assignModal.isOpen}
+          onClose={() => setAssignModal({ isOpen: false, session: null })}
+          session={assignModal.session}
+          callers={callers}
+          onAssign={handleAssignCaller}
+        />
+      )}
     </div>
   );
 };
