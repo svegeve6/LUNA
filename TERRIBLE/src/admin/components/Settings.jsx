@@ -322,8 +322,11 @@ export default function Settings() {
     customThemes[themeId] = themeData;
     localStorage.setItem('customThemes', JSON.stringify(customThemes));
 
+    // Trigger event to update theme list
+    window.dispatchEvent(new Event('customThemeAdded'));
+
     setShowThemeCreator(false);
-    alert(`Theme "${themeData.name}" saved! Reload the page to see it in the theme list.`);
+    alert(`Theme "${themeData.name}" saved and is now available in the theme selector!`);
   };
 
   return (

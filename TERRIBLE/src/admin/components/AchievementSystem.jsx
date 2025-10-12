@@ -206,6 +206,11 @@ export const unlockAchievement = (achievementId) => {
   if (!unlocked.includes(achievementId)) {
     unlocked.push(achievementId);
     localStorage.setItem('achievements', JSON.stringify(unlocked));
+
+    // Trigger event to notify UI
+    const achievement = achievements.find(a => a.id === achievementId);
+    window.dispatchEvent(new CustomEvent('achievementUnlocked', { detail: achievement }));
+
     return true; // Achievement was newly unlocked
   }
   return false;

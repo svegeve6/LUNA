@@ -1,20 +1,29 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { themes, applyTheme, initializeTheme } from '../themes/themeConfig';
+import { themes, applyTheme, initializeTheme, getAllThemes } from '../themes/themeConfig';
 
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
   const [currentTheme, setCurrentTheme] = useState('lunar');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [availableThemes, setAvailableThemes] = useState(() => getAllThemes());
 
   useEffect(() => {
     // Initialize theme on mount
     const savedTheme = initializeTheme();
     setCurrentTheme(savedTheme);
+
+    // Listen for custom theme changes
+    const handleStorageChange = () => {
+      setAvailableThemes(getAllThemes());
+    };
+
+    window.addEventListener('customThemeAdded', handleStorageChange);
+    return () => window.removeEventListener('customThemeAdded', handleStorageChange);
   }, []);
 
   const changeTheme = (themeName) => {
-    if (themes[themeName] && themeName !== currentTheme) {
+    if (availableThemes[themeName] && themeName !== currentTheme) {
       setIsTransitioning(true);
 
       // Wait for fade out
@@ -34,9 +43,9 @@ export function ThemeProvider({ children }) {
     currentTheme,
     changeTheme,
     isTransitioning,
-    themes: Object.keys(themes).map(key => ({
+    themes: Object.keys(availableThemes).map(key => ({
       id: key,
-      name: themes[key].name
+      name: availableThemes[key].name
     }))
   };
 

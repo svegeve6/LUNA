@@ -177,6 +177,11 @@ export const themes = {
 };
 
 export const getTheme = (themeName) => {
+  // Check for custom themes in localStorage
+  const customThemes = JSON.parse(localStorage.getItem('customThemes') || '{}');
+  if (customThemes[themeName]) {
+    return customThemes[themeName];
+  }
   return themes[themeName] || themes.lunar;
 };
 
@@ -193,6 +198,18 @@ export const applyTheme = (themeName) => {
 
   // Store theme preference
   localStorage.setItem('adminTheme', themeName);
+};
+
+// Get all available themes including custom ones
+export const getAllThemes = () => {
+  const customThemes = JSON.parse(localStorage.getItem('customThemes') || '{}');
+  const allThemes = { ...themes };
+
+  Object.entries(customThemes).forEach(([key, theme]) => {
+    allThemes[key] = theme;
+  });
+
+  return allThemes;
 };
 
 // Initialize theme on load

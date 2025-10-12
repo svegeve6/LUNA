@@ -11,6 +11,7 @@ import BannedIPs from './components/BannedIPs';
 import LoginPage from './pages/LoginPage';
 import MacOSLayout from './components/MacOSLayout';
 import SeasonalDecorations from './components/SeasonalDecorations';
+import AchievementToast from './components/AchievementToast';
 import { LogOut } from 'lucide-react';
 import './styles/themes.css';
 
@@ -20,6 +21,7 @@ const AppContent = () => {
   const [activeView, setActiveView] = useState('dashboard');
   const [isAppearing, setIsAppearing] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState('Gemini');
+  const [achievementToast, setAchievementToast] = useState(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -27,6 +29,14 @@ const AppContent = () => {
     } else {
       setIsAppearing(false);
     }
+
+    // Listen for achievement unlocks
+    const handleAchievementUnlocked = (e) => {
+      setAchievementToast(e.detail);
+    };
+
+    window.addEventListener('achievementUnlocked', handleAchievementUnlocked);
+    return () => window.removeEventListener('achievementUnlocked', handleAchievementUnlocked);
   }, [isAuthenticated]);
 
   if (!isAuthenticated) {
@@ -46,6 +56,14 @@ const AppContent = () => {
 
   return (
     <>
+      {/* Achievement Toast */}
+      {achievementToast && (
+        <AchievementToast
+          achievement={achievementToast}
+          onClose={() => setAchievementToast(null)}
+        />
+      )}
+
       {/* Seasonal Decorations - Ghosts and Falling Leaves */}
       <SeasonalDecorations />
 
