@@ -1,61 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Settings, Activity, User, Phone, Trophy } from 'lucide-react';
+import { LayoutDashboard, Settings, Activity, User, Phone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
-import SeasonalAvatar from './SeasonalAvatar';
-import AchievementSystem, { unlockAchievement } from './AchievementSystem';
 
 const MacOSLayout = ({ children, activeView, onViewChange }) => {
   const [pruneJuiceLevel, setPruneJuiceLevel] = useState(0);
   const { userRole } = useAuth();
-  const { currentTheme } = useTheme();
-  const [showAchievements, setShowAchievements] = useState(false);
 
   useEffect(() => {
-    // Generate deterministic prune juice level based on IP and date
-    const generateDailyPruneJuice = async () => {
-      try {
-        // Get user's IP address
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        const userIP = data.ip;
-
-        // Get current date (YYYY-MM-DD format)
-        const today = new Date().toISOString().split('T')[0];
-
-        // Create a seed from IP + date
-        const seed = userIP + today;
-
-        // Simple hash function to convert seed to number
-        let hash = 0;
-        for (let i = 0; i < seed.length; i++) {
-          const char = seed.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
-          hash = hash & hash; // Convert to 32bit integer
-        }
-
-        // Convert hash to percentage (0-100)
-        const percentage = Math.abs(hash % 101);
-        setPruneJuiceLevel(percentage);
-      } catch (error) {
-        // Fallback to random if IP fetch fails
-        console.error('Failed to fetch IP, using fallback:', error);
-        setPruneJuiceLevel(Math.floor(Math.random() * 101));
-      }
-    };
-
-    generateDailyPruneJuice();
-
-    // Unlock first login achievement
-    unlockAchievement('first_login');
-
-    // Check for night owl/early bird
-    const hour = new Date().getHours();
-    if (hour >= 0 && hour < 4) {
-      unlockAchievement('night_owl');
-    } else if (hour >= 5 && hour < 7) {
-      unlockAchievement('early_bird');
-    }
+    // Set random prune juice level on mount and refresh
+    setPruneJuiceLevel(Math.floor(Math.random() * 100));
   }, []);
 
   // Show different navigation based on user role
@@ -68,16 +21,15 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
   ];
 
   return (
-    <>
-      {showAchievements && <AchievementSystem onClose={() => setShowAchievements(false)} />}
-
-      <div className="min-h-screen theme-page-bg theme-text-primary flex">
-        {/* Sidebar */}
-        <div className="w-72 theme-primary-bg border-r theme-border flex flex-col relative">
-          {/* User Profile Section */}
-          <div className="p-6 border-b border-gray-800/50">
-            <div className="flex items-center space-x-3">
-              <SeasonalAvatar className="w-12 h-12" />
+    <div className="min-h-screen theme-page-bg theme-text-primary flex">
+      {/* Sidebar */}
+      <div className="w-72 theme-primary-bg border-r theme-border flex flex-col">
+        {/* User Profile Section */}
+        <div className="p-6 border-b border-gray-800/50">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white">
+              <User className="w-6 h-6" />
+            </div>
             <div className="flex-1">
               <div className="font-medium text-white">Luna Panel</div>
               <div className={`text-xs px-2 py-0.5 rounded inline-block mt-1 ${
@@ -93,7 +45,7 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
         </div>
 
         {/* Main Navigation */}
-        <div className="flex-1 py-4 relative">
+        <div className="flex-1 py-4">
           {navItems.map((item) => (
             <button
               key={item.id}
@@ -110,87 +62,26 @@ const MacOSLayout = ({ children, activeView, onViewChange }) => {
           ))}
         </div>
 
-        {/* Achievements Button */}
-        <div className="px-6 pb-3">
-          <button
-            onClick={() => setShowAchievements(true)}
-            className="w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-500/10 to-orange-500/10 hover:from-yellow-500/20 hover:to-orange-500/20 border border-yellow-500/30 text-yellow-400 transition-all duration-200"
-          >
-            <Trophy className="w-4 h-4" />
-            <span className="text-sm font-medium">Achievements</span>
-          </button>
-        </div>
-
         {/* Prune Juice Meter */}
         <div className="p-6 border-t border-gray-800/50">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-gray-500">Prune Juice Meter</span>
-            <Activity className={`w-4 h-4 ${currentTheme === 'christmas' ? 'text-red-400' : 'text-purple-400'}`} />
+            <Activity className="w-4 h-4 text-purple-400" />
           </div>
           <div className="h-2 bg-[#1C2029] rounded-full overflow-hidden">
-            {currentTheme === 'christmas' ? (
-              <div
-                className="h-full rounded-full candy-cane-stripes"
-                style={{ width: `${pruneJuiceLevel}%` }}
-              />
-            ) : currentTheme === 'fall' ? (
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${pruneJuiceLevel}%`,
-                  background: 'linear-gradient(90deg, #d97706, #ea580c, #dc2626)'
-                }}
-              />
-            ) : currentTheme === 'halloween' ? (
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${pruneJuiceLevel}%`,
-                  background: 'linear-gradient(90deg, #ff8c00, #9333ea)'
-                }}
-              />
-            ) : (
-              <div
-                className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full"
-                style={{ width: `${pruneJuiceLevel}%` }}
-              />
-            )}
+            <div className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full" style={{ width: `${pruneJuiceLevel}%` }}></div>
           </div>
           <div className="text-xs text-gray-600 mt-1 text-right">{pruneJuiceLevel}%</div>
         </div>
+      </div>
 
-        <style>{`
-          .candy-cane-stripes {
-            background: repeating-linear-gradient(
-              45deg,
-              #ffffff,
-              #ffffff 5px,
-              #dc2626 5px,
-              #dc2626 10px
-            );
-            background-size: 14.14px 14.14px;
-            animation: candy-cane-animation 0.6s linear infinite;
-          }
-
-          @keyframes candy-cane-animation {
-            0% {
-              background-position: 0 0;
-            }
-            100% {
-              background-position: 14.14px 0;
-            }
-          }
-        `}</style>
-        </div>
-
-        {/* Main Content Area */}
-        <div className="flex-1 bg-[#0F1117] overflow-auto">
-          <div className="relative">
-            {children}
-          </div>
+      {/* Main Content Area */}
+      <div className="flex-1 bg-[#0F1117] overflow-auto">
+        <div className="relative">
+          {children}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

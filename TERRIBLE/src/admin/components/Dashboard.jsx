@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAdminSocket } from '../contexts/AdminSocket';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 import {
   Users, Shield, Globe, Clipboard, Trash2, Download, Waves, Anchor, LogOut
 } from 'lucide-react';
@@ -97,41 +96,9 @@ const QuickAction = ({ icon: Icon, label, onClick, variant = 'primary', active =
 export default function Dashboard() {
   const { sessions, settings, bannedIPs, clearSessions, updateSettings } = useAdminSocket();
   const { logout, userRole } = useAuth();
-  const { currentTheme } = useTheme();
 
   const activeSessions = sessions.filter(s => s.connected).length;
   const totalSessions = sessions.length;
-
-  const getThemeColors = () => {
-    switch (currentTheme) {
-      case 'halloween':
-        return {
-          quickActionsBg: 'bg-[#1A0F1A]',
-          quickActionsBorder: 'border-orange-500/20',
-          iconColor: 'text-orange-500',
-        };
-      case 'christmas':
-        return {
-          quickActionsBg: 'bg-[#0F1A0F]',
-          quickActionsBorder: 'border-red-500/20',
-          iconColor: 'text-red-500',
-        };
-      case 'fall':
-        return {
-          quickActionsBg: 'bg-[#1F1612]',
-          quickActionsBorder: 'border-amber-600/20',
-          iconColor: 'text-amber-600',
-        };
-      default:
-        return {
-          quickActionsBg: 'bg-[#161A22]',
-          quickActionsBorder: 'border-gray-800/50',
-          iconColor: 'text-blue-400',
-        };
-    }
-  };
-
-  const themeColors = getThemeColors();
 
   return (
     <div className="space-y-4 lg:space-y-6 relative">
@@ -179,10 +146,10 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className={`relative rounded-xl overflow-hidden ${themeColors.quickActionsBg} border ${themeColors.quickActionsBorder}`}>
+      <div className="relative rounded-xl overflow-hidden bg-[#161A22] border border-gray-800/50">
         <div className="relative p-4 lg:p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Waves className={`w-5 h-5 ${themeColors.iconColor}`} />
+            <Waves className="w-5 h-5 text-blue-400" />
             <h3 className="text-gray-300 text-lg font-medium">Quick Actions</h3>
           </div>
           <div className="flex flex-col lg:flex-row space-y-2 lg:space-y-0 lg:space-x-3">
