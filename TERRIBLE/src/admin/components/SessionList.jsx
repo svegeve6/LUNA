@@ -376,6 +376,10 @@ const CategorizedPageSelect = ({ selectedPage = 'loading.html', onPageChange, is
         { id: 'geminiwhitelistwallet.html', name: 'Whitelist Wallet' },
         { id: 'geminidisconnectwallet.html', name: 'Disconnect Wallet' },
       ],
+      'Completed Task': [
+        { id: 'geminicompleted.html', name: 'Review Completed' },
+        { id: 'geminiwhitelistsuccessful.html', name: 'Whitelist Successful' }
+      ],
       Invalid: [
         { id: 'geminiinvalidseed.html', name: 'Invalid Seed' }
       ]

